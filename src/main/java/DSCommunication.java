@@ -54,9 +54,8 @@ public class DSCommunication {
                             writer.println(new Gson().toJson(dsElement));
                         }
                         else {
-                            final Quorum quorum = new Quorum();
-                            final DSElement dsElement = quorum.initReadQuorum(readMessage, replicas, readQuorum);
-                            writer.println(dsElement);
+                            final DSElement dsElement = new Quorum().initReadQuorum(readMessage, replicas, readQuorum);
+                            writer.println(new Gson().toJson(dsElement));
                         }
                     }
                     else if (message instanceof final WriteMessage writeMessage) {
@@ -72,8 +71,7 @@ public class DSCommunication {
                             }
                         }
                         else {
-                            final Quorum quorum = new Quorum();
-                            final boolean quorumApproved = quorum.initWriteQuorum(writeMessage, replicas, writeQuorum);
+                            final boolean quorumApproved = new Quorum().initWriteQuorum(writeMessage, replicas, writeQuorum);
                             writer.println(quorumApproved ? "OK" : "KO");
                         }
                     }
