@@ -3,6 +3,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Keeps references to the other replicas in the data store
+ */
 public class Replicas {
     private final Map<String, Replica> replicas = new HashMap<>();
 
@@ -14,9 +17,11 @@ public class Replicas {
         return new HashSet<Replica>(replicas.values());
     }
 
-    //TODO: Updates all replicas with replicas references
+    /**
+     * Sends this replica references to other replicas in the data store
+     */
     public void updateReplicas() {
-
+        //TODO: Implement
     }
 
     public int size() {

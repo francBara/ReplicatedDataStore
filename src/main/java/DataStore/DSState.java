@@ -2,14 +2,31 @@ package DataStore;
 
 import java.util.HashMap;
 
+/**
+ * Manages the actual local datastore of a single replica
+ */
 public class DSState {
+    //TODO: Read and write should probably use a file as permanent storage, and dataStore field for caching
     private HashMap<String, DSElement> dataStore = new HashMap<>();
 
-    public synchronized DSElement read(String key) {
+    /**
+     *
+     * @param key
+     * @return
+     * @throws DSStateException If some internal error occurs during reading
+     */
+    public synchronized DSElement read(String key) throws DSStateException {
+        //TODO: Should manage the case in which an element is not stored in the state, maybe with an exception
         return dataStore.get(key);
     }
 
-    public synchronized void write(String key, DSElement element) {
+    /**
+     *
+     * @param key
+     * @param element
+     * @throws DSStateException If some internal error occurs during writing
+     */
+    public synchronized void write(String key, DSElement element) throws DSStateException {
         dataStore.put(key, element);
     }
 }

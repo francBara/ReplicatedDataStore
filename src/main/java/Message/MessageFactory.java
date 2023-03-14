@@ -1,5 +1,6 @@
 package Message;
 
+
 public class MessageFactory {
     //TODO: Replace RuntimeException occurrences with proper errors
     public Message buildMessage(String message) {

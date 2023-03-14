@@ -10,14 +10,26 @@ import java.util.Scanner;
 import java.util.Set;
 
 public class Quorum {
+    /**
+     *
+     * @param message The original write message, sent from the client
+     * @param replicas The other replicas in the datastore
+     * @param quorum The number of replicas to contact
+     * @return True if most replicas wrote successfully, false if not
+     */
     public boolean initWriteQuorum(WriteMessage message, Replicas replicas, int quorum) {
-        //TODO: Implement method
-        if (quorum > replicas.size()) {
-            throw(new RuntimeException());
-        }
+        //TODO: Implement
         return false;
     }
 
+    /**
+     *
+     * @param message The original read message, sent from the client
+     * @param replicas The other replicas in the datastore
+     * @param quorum The number of replicas to contact
+     * @return The most recent element read from the replicas
+     * @throws IOException
+     */
     public DSElement initReadQuorum(ReadMessage message, Replicas replicas, int quorum) throws IOException {
         if (quorum > replicas.size()) {
             throw(new RuntimeException());
@@ -27,6 +39,7 @@ public class Quorum {
 
         message.isQuorum = true;
 
+        //TODO: Improve the choice of replicas to contact, remember to take this replica into account
         int i = 0;
         for (Replica replica : replicas.getReplicas()) {
             if (i == quorum) {
