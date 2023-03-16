@@ -4,19 +4,27 @@ package DataStore;
  * The element contained in a data store, referenced through a key
  */
 public class DSElement {
-    private final String value;
-    private final int timestamp;
+    private String value;
+    private int versionNumber;
 
-    public DSElement(String value, int timestamp) {
+    public DSElement(String value) {
         this.value = value;
-        this.timestamp = timestamp;
+        this.versionNumber = 0;
     }
 
     public String getValue() {
         return value;
     }
 
-    public int getTimestamp() {
-        return timestamp;
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public int getVersionNumber() {
+        return versionNumber;
+    }
+
+    synchronized public void incrementVersionNumber() {
+        versionNumber++;
     }
 }

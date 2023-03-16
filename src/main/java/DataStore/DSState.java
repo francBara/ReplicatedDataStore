@@ -23,11 +23,18 @@ public class DSState {
     /**
      *
      * @param key
-     * @param element
+     * @param value
      * @throws DSStateException If some internal error occurs during writing
      */
-    public synchronized void write(String key, DSElement element) throws DSStateException {
-        dataStore.put(key, element);
+    public synchronized void write(String key, String value) throws DSStateException {
+        if (dataStore.containsKey(key)) {
+            DSElement dsElement = dataStore.get(key);
+            dsElement.setValue(value);
+            dsElement.incrementVersionNumber();
+        }
+        else {
+            dataStore.put(key, new DSElement(value));
+        }
     }
 }
 
