@@ -6,6 +6,7 @@ public enum MessageType {
     Write,
     ReadQuorum,
     WriteQuorum,
+    ReplicasUpdate,
     OK,
     KO
 }

@@ -1,16 +1,17 @@
 import DataStore.DSElement;
+import Exceptions.QuorumNumberException;
 import Message.Message;
 import Message.MessageType;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
+
 public class Quorum {
-    private final int writeQuorum;
-    private final int readQuorum;
+    private int writeQuorum;
+    private int readQuorum;
 
     public Quorum(int writeQuorum, int readQuorum) {
         this.writeQuorum = writeQuorum;
@@ -23,9 +24,33 @@ public class Quorum {
      * @param replicas The other replicas in the datastore
      * @return True if most replicas wrote successfully, false if not
      */
-    public boolean initWriteQuorum(Message message, Replicas replicas) {
-        //TODO: Implement
-        return false;
+    public boolean initWriteQuorum(Message message, Replicas replicas) throws IOException, QuorumNumberException {
+        if (writeQuorum > replicas.size()) {
+            throw(new QuorumNumberException());
+        }
+        else if (message.messageType != MessageType.Write) {
+            throw(new RuntimeException());
+        }
+
+        message.setQuorum();
+
+        final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum);
+
+        Scanner scanner;
+        final Gson gson = new Gson();
+        int successfulReplicas = 0;
+
+        for (Socket socket : quorumReplicas) {
+            //TODO: Should implement timeouts
+            scanner = new Scanner(socket.getInputStream());
+            Message writeAck = gson.fromJson(scanner.nextLine(), Message.class);
+            if (writeAck.messageType == MessageType.OK) {
+                successfulReplicas++;
+            }
+            socket.close();
+        }
+
+        return successfulReplicas > replicas.size() / 2;
     }
 
     /**
@@ -35,8 +60,11 @@ public class Quorum {
      * @return The most recent element read from the replicas
      * @throws IOException
      */
-    public DSElement initReadQuorum(Message message, Replicas replicas) throws IOException {
-        if (readQuorum > replicas.size() || message.messageType != MessageType.Read) {
+    public DSElement initReadQuorum(Message message, Replicas replicas) throws IOException, QuorumNumberException {
+        if (readQuorum > replicas.size()) {
+            throw(new QuorumNumberException());
+        }
+        else if (message.messageType != MessageType.Read) {
             throw(new RuntimeException());
         }
 
@@ -45,8 +73,9 @@ public class Quorum {
         final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, readQuorum);
 
         Scanner scanner;
-        Gson gson = new Gson();
+        final Gson gson = new Gson();
         DSElement currentReadElement = null;
+
         for (Socket socket : quorumReplicas) {
             //TODO: Should implement timeouts
             scanner = new Scanner(socket.getInputStream());
@@ -54,6 +83,7 @@ public class Quorum {
             if (currentReadElement == null || readElement.getVersionNumber() > currentReadElement.getVersionNumber()) {
                 currentReadElement = readElement;
             }
+            socket.close();
         }
 
         return currentReadElement;

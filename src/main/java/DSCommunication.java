@@ -1,6 +1,7 @@
 import DataStore.DSElement;
 import DataStore.DSState;
 import DataStore.DSStateException;
+import Exceptions.QuorumNumberException;
 import Message.Message;
 import Message.MessageType;
 import com.google.gson.Gson;
@@ -55,6 +56,10 @@ public class DSCommunication {
         replicas = gson.fromJson(scanner.nextLine(), Replicas.class);
         quorum = gson.fromJson(scanner.nextLine(), Quorum.class);
 
+        try {
+            socket.close();
+        } catch(IOException ignored) {}
+
         begin();
     }
 
@@ -69,6 +74,7 @@ public class DSCommunication {
         while (true) {
             //For every open connection, a new thread starts
             final Socket clientSocket = serverSocket.accept();
+
             executor.submit(() -> {
                 Scanner scanner;
                 PrintWriter writer;
@@ -86,8 +92,15 @@ public class DSCommunication {
                     final Gson gson = new Gson();
                     writer.println(gson.toJson(replicas));
                     writer.println(gson.toJson(quorum));
-                    //The new replica is added to the replicas
-                    replicas.addReplica(new Replica(clientSocket.getInetAddress().toString(), message.getPort()));
+
+                    final Replica replica = new Replica(clientSocket.getInetAddress().toString(), message.getPort());
+
+                    //The new replica is sent to other replicas
+                    replicas.addReplica(replica);
+                    replicas.updateReplicas(replica);
+                }
+                else if (message.messageType == MessageType.ReplicasUpdate) {
+                    replicas.addReplica(new Gson().fromJson(scanner.nextLine(), Replica.class));
                 }
                 else if (message.messageType == MessageType.Read) {
                     try {
@@ -95,8 +108,9 @@ public class DSCommunication {
                         final DSElement dsElement = quorum.initReadQuorum(message, replicas);
                         //This replica sends the most recent value to the client
                         writer.println(dsElement.getValue());
-                    } catch(IOException e) {
-                        writer.println(new Message(MessageType.KO));
+                    } catch(IOException | QuorumNumberException e) {
+                        //TODO: Handle high quorum exception
+                        writer.println(new Message(MessageType.KO).toJson());
                     }
                 }
                 else if (message.messageType == MessageType.ReadQuorum) {
@@ -105,24 +119,32 @@ public class DSCommunication {
                         DSElement dsElement = dsState.read(message.getKey());
                         writer.println(new Gson().toJson(dsElement));
                     } catch(DSStateException e) {
-                        writer.println(new Message(MessageType.KO));
+                        writer.println(new Message(MessageType.KO).toJson());
                     }
                 }
                 else if (message.messageType == MessageType.Write) {
-                    //This replica starts a write quorum
-                    final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
-                    writer.println(new Message(quorumApproved ? MessageType.OK : MessageType.KO));
+                    try {
+                        //This replica starts a write quorum
+                        final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
+                        writer.println(new Message(quorumApproved ? MessageType.OK : MessageType.KO).toJson());
+                    } catch(IOException | QuorumNumberException e) {
+                        //TODO: Handle high quorum exception
+                        System.out.println(e);
+                        writer.println(new Message(MessageType.KO).toJson());
+                    }
                 }
                 else if (message.messageType == MessageType.WriteQuorum) {
                     try {
                         //TODO: Is this the right way to do it? should there be more checks?
                         dsState.write(message.getKey(), message.getValue());
-                        writer.println(new Message(MessageType.OK));
+                        writer.println(new Message(MessageType.OK).toJson());
                     } catch(DSStateException e) {
-                        writer.println(new Message(MessageType.KO));
+                        writer.println(new Message(MessageType.KO).toJson());
                     }
                 }
-                //TODO: Properly close socket connection
+                try {
+                    clientSocket.close();
+                } catch(IOException ignored) {}
             });
         }
     }

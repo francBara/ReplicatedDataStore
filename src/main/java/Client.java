@@ -26,6 +26,8 @@ public class Client {
 
         writer.println(message.toJson());
 
+        socket.close();
+
         return scanner.nextLine();
     }
 
@@ -39,8 +41,9 @@ public class Client {
         message.setValue(value);
 
         writer.println(message.toJson());
-
         final Message reply = new Gson().fromJson(scanner.nextLine(), Message.class);
+
+        socket.close();
 
         return reply.messageType == MessageType.OK;
     }

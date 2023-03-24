@@ -2,10 +2,13 @@ package Message;
 
 import com.google.gson.Gson;
 
+import java.awt.image.ReplicateScaleFilter;
+
 public class Message {
     private String key;
     private String value;
     private int port;
+
     public MessageType messageType;
 
     public Message(MessageType messageType) {
