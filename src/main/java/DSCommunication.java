@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 public class DSCommunication {
     private final int port;
 
-    private final Replicas replicas = new Replicas();
+    private Replicas replicas;
     private final DSState dsState = new DSState();
     private Quorum quorum;
 
@@ -31,6 +31,7 @@ public class DSCommunication {
      */
     public void initiateDataStore(int writeQuorum, int readQuorum) throws IOException {
         quorum = new Quorum(writeQuorum, readQuorum);
+        replicas = new Replicas();
         begin();
     }
 
@@ -42,12 +43,17 @@ public class DSCommunication {
     public void joinDataStore(String address, int dataStorePort) throws IOException {
         final Socket socket = new Socket(address, dataStorePort);
         final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+        final Scanner scanner = new Scanner(socket.getInputStream());
 
         final Message message = new Message(MessageType.Join);
+        message.setPort(this.port);
 
         writer.println(message.toJson());
 
-        //TODO: Listen for replicas, write quorum and read quorum
+        final Gson gson = new Gson();
+
+        replicas = gson.fromJson(scanner.nextLine(), Replicas.class);
+        quorum = gson.fromJson(scanner.nextLine(), Quorum.class);
 
         begin();
     }
@@ -77,18 +83,18 @@ public class DSCommunication {
                 final Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
 
                 if (message.messageType == MessageType.Join) {
-                    writer.println(new Gson().toJson(replicas));
-                    writer.println();
+                    final Gson gson = new Gson();
+                    writer.println(gson.toJson(replicas));
+                    writer.println(gson.toJson(quorum));
                     //The new replica is added to the replicas
                     replicas.addReplica(new Replica(clientSocket.getInetAddress().toString(), message.getPort()));
-                    //TODO: Send also writeQuorum and readQuorum
                 }
                 else if (message.messageType == MessageType.Read) {
                     try {
                         //This replica starts a read quorum
                         final DSElement dsElement = quorum.initReadQuorum(message, replicas);
                         //This replica sends the most recent value to the client
-                        writer.println(new Gson().toJson(dsElement));
+                        writer.println(dsElement.getValue());
                     } catch(IOException e) {
                         writer.println(new Message(MessageType.KO));
                     }

@@ -1,15 +1,22 @@
 import java.io.IOException;
 import java.util.Scanner;
 
-public class Main {
+public class DataStoreMain {
     public static void main(String[] args) {
+        //TODO: Improve overall UX
+
         final Scanner scanner = new Scanner(System.in);
 
-        //TODO: Now writeQuorum, readQuorum and port are hardcoded. They should be chosen by the user
-        final DSCommunication dsCommunication = new DSCommunication(5000);
+        System.out.println("Choose a port:");
 
-        System.out.println("REPLICATED DATA STORE");
-        System.out.println("A - Initialize data store");
+        int port = scanner.nextInt();
+        scanner.nextLine();
+
+        //TODO: writeQuorum and readQuorum are hardcoded. They should be chosen by the user.
+        final DSCommunication dsCommunication = new DSCommunication(port);
+
+
+        System.out.println("\n\nA - Initialize data store");
         System.out.println("B - Join data store");
 
         String choice = scanner.nextLine();
@@ -27,7 +34,7 @@ public class Main {
             try {
                 dsCommunication.joinDataStore(ip, 5000);
             } catch(IOException e) {
-                System.out.println("ERROR");
+                System.out.println(e);
             }
         }
     }
