@@ -32,7 +32,6 @@ public class DistributedTest extends TestCase {
             }).start();
         }
 
-
         try {
             Thread.sleep(3000);
         } catch(Exception ignored) {fail();}
@@ -45,6 +44,10 @@ public class DistributedTest extends TestCase {
             boolean writeSuccessful = client.write("Alen", "Kaja");
 
             assertTrue(writeSuccessful);
+
+            assertEquals("Kaja", client.read("Alen"));
+
+            client.bind("127.0.0.1", 5001);
 
             assertEquals("Kaja", client.read("Alen"));
         } catch(Exception e) {

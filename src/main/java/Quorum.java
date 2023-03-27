@@ -26,7 +26,7 @@ public class Quorum {
      */
     public boolean initWriteQuorum(Message message, Replicas replicas) throws IOException, QuorumNumberException {
         if (writeQuorum > replicas.size()) {
-            throw(new QuorumNumberException());
+            throw(new QuorumNumberException(writeQuorum, replicas.size()));
         }
         else if (message.messageType != MessageType.Write) {
             throw(new RuntimeException());
@@ -62,7 +62,7 @@ public class Quorum {
      */
     public DSElement initReadQuorum(Message message, Replicas replicas) throws IOException, QuorumNumberException {
         if (readQuorum > replicas.size()) {
-            throw(new QuorumNumberException());
+            throw(new QuorumNumberException(readQuorum, replicas.size()));
         }
         else if (message.messageType != MessageType.Read) {
             throw(new RuntimeException());

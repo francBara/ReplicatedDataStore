@@ -15,6 +15,7 @@ import java.util.Set;
  */
 public class Replicas {
     private final HashSet<Replica> replicas = new HashSet<>();
+    private transient Replica thisReplica;
 
     public void addReplica(Replica newReplica) {
         replicas.add(newReplica);
@@ -48,6 +49,7 @@ public class Replicas {
             if (i == replicasNumber) {
                 break;
             }
+
             replicasSockets.add(replica.sendMessage(message));
             i++;
         }

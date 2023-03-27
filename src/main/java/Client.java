@@ -26,9 +26,13 @@ public class Client {
 
         writer.println(message.toJson());
 
+        //TODO: Handle when reply is a KO message
+
+        final String readValue = scanner.nextLine();
+
         socket.close();
 
-        return scanner.nextLine();
+        return readValue;
     }
 
     public boolean write(String key, String value) throws IOException {

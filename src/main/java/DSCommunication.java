@@ -82,6 +82,9 @@ public class DSCommunication {
                     scanner = new Scanner(clientSocket.getInputStream());
                     writer = new PrintWriter(clientSocket.getOutputStream(), true);
                 } catch(IOException e) {
+                    try {
+                        clientSocket.close();
+                    } catch(Exception ignored) {}
                     return;
                 }
 
@@ -93,7 +96,7 @@ public class DSCommunication {
                     writer.println(gson.toJson(replicas));
                     writer.println(gson.toJson(quorum));
 
-                    final Replica replica = new Replica(clientSocket.getInetAddress().toString(), message.getPort());
+                    final Replica replica = new Replica(clientSocket.getInetAddress().toString().substring(1), message.getPort());
 
                     //The new replica is sent to other replicas
                     replicas.addReplica(replica);
@@ -101,15 +104,18 @@ public class DSCommunication {
                 }
                 else if (message.messageType == MessageType.ReplicasUpdate) {
                     replicas.addReplica(new Gson().fromJson(scanner.nextLine(), Replica.class));
+                    System.out.println(this + "Current replicas: " + replicas.size());
                 }
                 else if (message.messageType == MessageType.Read) {
                     try {
                         //This replica starts a read quorum
                         final DSElement dsElement = quorum.initReadQuorum(message, replicas);
+
                         //This replica sends the most recent value to the client
                         writer.println(dsElement.getValue());
                     } catch(IOException | QuorumNumberException e) {
                         //TODO: Handle high quorum exception
+                        System.out.println("Read error: " + e);
                         writer.println(new Message(MessageType.KO).toJson());
                     }
                 }
@@ -126,10 +132,11 @@ public class DSCommunication {
                     try {
                         //This replica starts a write quorum
                         final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
+
                         writer.println(new Message(quorumApproved ? MessageType.OK : MessageType.KO).toJson());
                     } catch(IOException | QuorumNumberException e) {
                         //TODO: Handle high quorum exception
-                        System.out.println(e);
+                        System.out.println("Write error: " + e);
                         writer.println(new Message(MessageType.KO).toJson());
                     }
                 }
