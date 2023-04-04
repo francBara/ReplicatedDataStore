@@ -54,6 +54,7 @@ public class DSCommunication {
         final Gson gson = new Gson();
 
         replicas = gson.fromJson(scanner.nextLine(), Replicas.class);
+        replicas.addReplica(new Replica(socket.getInetAddress().toString().substring(1), scanner.nextInt()));
         quorum = gson.fromJson(scanner.nextLine(), Quorum.class);
 
         try {
@@ -92,19 +93,22 @@ public class DSCommunication {
                 final Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
 
                 if (message.messageType == MessageType.Join) {
-                    final Gson gson = new Gson();
-                    writer.println(gson.toJson(replicas));
-                    writer.println(gson.toJson(quorum));
+                    synchronized (this) {
+                        final Gson gson = new Gson();
+                        writer.println(gson.toJson(replicas));
+                        writer.println(port);
+                        writer.println(gson.toJson(quorum));
 
-                    final Replica replica = new Replica(clientSocket.getInetAddress().toString().substring(1), message.getPort());
+                        final Replica replica = new Replica(clientSocket.getInetAddress().toString().substring(1), message.getPort());
 
-                    //The new replica is sent to other replicas
-                    replicas.addReplica(replica);
-                    replicas.updateReplicas(replica);
+                        //The new replica is sent to other replicas
+                        replicas.updateReplicas(replica);
+                        replicas.addReplica(replica);
+                    }
                 }
                 else if (message.messageType == MessageType.ReplicasUpdate) {
                     replicas.addReplica(new Gson().fromJson(scanner.nextLine(), Replica.class));
-                    System.out.println(this + "Current replicas: " + replicas.size());
+                    //System.out.println(this + "Current replicas: " + replicas.size());
                 }
                 else if (message.messageType == MessageType.Read) {
                     try {
@@ -154,5 +158,9 @@ public class DSCommunication {
                 } catch(IOException ignored) {}
             });
         }
+    }
+
+    public int getReplicasSize() {
+        return replicas.size();
     }
 }

@@ -15,13 +15,12 @@ import java.util.Set;
  */
 public class Replicas {
     private final HashSet<Replica> replicas = new HashSet<>();
-    private transient Replica thisReplica;
 
-    public void addReplica(Replica newReplica) {
+    public synchronized void addReplica(Replica newReplica) {
         replicas.add(newReplica);
     }
 
-    public void updateReplicas(Replica newReplica) {
+    public synchronized void updateReplicas(Replica newReplica) {
         final Message message = new Message(MessageType.ReplicasUpdate);
         final String replicaJson = new Gson().toJson(newReplica);
 
@@ -41,7 +40,7 @@ public class Replicas {
      * Sends a message to a given number of replicas, chosen indeterminately between available replicas
      * @param replicasNumber The number of replicas to contact
      */
-    public HashSet<Socket> sendMessageToBatch(Message message, int replicasNumber) throws IOException {
+    public synchronized HashSet<Socket> sendMessageToBatch(Message message, int replicasNumber) throws IOException {
         final HashSet<Socket> replicasSockets = new HashSet<>();
         //TODO: Improve the choice of replicas to contact, remember to take this replica into account
         int i = 0;
