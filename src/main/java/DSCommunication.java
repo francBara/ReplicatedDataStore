@@ -55,6 +55,7 @@ public class DSCommunication {
 
         replicas = gson.fromJson(scanner.nextLine(), Replicas.class);
         replicas.addReplica(new Replica(socket.getInetAddress().toString().substring(1), scanner.nextInt()));
+        scanner.nextLine();
         quorum = gson.fromJson(scanner.nextLine(), Quorum.class);
 
         try {

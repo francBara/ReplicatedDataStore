@@ -79,10 +79,13 @@ public class Quorum {
         for (Socket socket : quorumReplicas) {
             //TODO: Should implement timeouts
             scanner = new Scanner(socket.getInputStream());
+
             DSElement readElement = gson.fromJson(scanner.nextLine(), DSElement.class);
-            if (currentReadElement == null || readElement.getVersionNumber() > currentReadElement.getVersionNumber()) {
+
+            if (readElement != null && (currentReadElement == null || readElement.getVersionNumber() > currentReadElement.getVersionNumber())) {
                 currentReadElement = readElement;
             }
+
             socket.close();
         }
 

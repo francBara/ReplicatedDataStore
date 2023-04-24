@@ -22,4 +22,8 @@ public class Replica {
     public String getAddress() {
         return new String(address);
     }
+
+    public int getPort() {
+        return port;
+    }
 }

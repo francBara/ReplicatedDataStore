@@ -31,13 +31,18 @@ public class DistributedTest extends TestCase {
                     fail();
                 }
             }).start();
+            try {
+                Thread.sleep(400);
+            } catch(Exception ignored) {fail();}
         }
 
         try {
             Thread.sleep(3000);
         } catch(Exception ignored) {fail();}
 
+
         //Every replica should retain 10 references to other replicas
+        assertEquals(10, firstReplica.getReplicasSize());
         for (DSCommunication replicaController : replicasControllers) {
             assertEquals(10, replicaController.getReplicasSize());
         }
@@ -55,6 +60,20 @@ public class DistributedTest extends TestCase {
             client.bind("127.0.0.1", 5001);
 
             assertEquals("Kaja", client.read("Alen"));
+
+            assertTrue(client.write("Kaja", "Alen"));
+
+            assertEquals("Alen", client.read("Kaja"));
+
+            client.bind("127.0.0.1", 5002);
+
+            assertEquals("Kaja", client.read("Alen"));
+            assertEquals("Alen", client.read("Kaja"));
+
+            assertTrue(client.write("Distributed", "Systems"));
+
+            assertEquals("Systems", client.read("Distributed"));
+
         } catch(Exception e) {
             System.out.println(e);
             fail();

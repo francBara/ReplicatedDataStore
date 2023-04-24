@@ -25,13 +25,14 @@ public class Replicas {
         final String replicaJson = new Gson().toJson(newReplica);
 
         for (Replica replica : replicas) {
+            //System.out.println("Connecting to " + replica.getAddress() + " " + replica.getPort());
             try {
                 Socket socket = replica.sendMessage(message);
                 PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
                 writer.println(replicaJson);
                 socket.close();
             } catch(IOException e) {
-                //TODO: Handle exception
+                System.out.println("Kaja Error on " + replica.getAddress() + " " + replica.getPort() + ": " + e);
             }
         }
     }
@@ -52,6 +53,7 @@ public class Replicas {
             replicasSockets.add(replica.sendMessage(message));
             i++;
         }
+
         return replicasSockets;
     }
 
