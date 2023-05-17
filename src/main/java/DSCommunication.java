@@ -1,6 +1,6 @@
-import DataStore.DSElement;
-import DataStore.DSState;
-import DataStore.DSStateException;
+import DataStoreState.DSElement;
+import DataStoreState.DSState;
+import DataStoreState.DSStateException;
 import Exceptions.QuorumNumberException;
 import Message.Message;
 import Message.MessageType;

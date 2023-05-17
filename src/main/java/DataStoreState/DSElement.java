@@ -1,4 +1,4 @@
-package DataStore;
+package DataStoreState;
 
 /**
  * The element contained in a data store, referenced through a key

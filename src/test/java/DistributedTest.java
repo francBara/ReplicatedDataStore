@@ -1,8 +1,10 @@
 import junit.framework.TestCase;
+import org.junit.Test;
 
 import java.util.HashSet;
 
 public class DistributedTest extends TestCase {
+
     public void testInitAndRead() {
         final DSCommunication firstReplica = new DSCommunication(5000);
         final HashSet<DSCommunication> replicasControllers = new HashSet<>();

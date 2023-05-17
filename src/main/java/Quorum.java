@@ -1,4 +1,4 @@
-import DataStore.DSElement;
+import DataStoreState.DSElement;
 import Exceptions.QuorumNumberException;
 import Message.Message;
 import Message.MessageType;
@@ -12,6 +12,7 @@ import java.util.Set;
 public class Quorum {
     private int writeQuorum;
     private int readQuorum;
+    
 
     public Quorum(int writeQuorum, int readQuorum) {
         this.writeQuorum = writeQuorum;
