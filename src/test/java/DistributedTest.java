@@ -76,6 +76,17 @@ public class DistributedTest extends TestCase {
 
             assertEquals("Systems", client.read("Distributed"));
 
+            assertTrue(client.write("Distributed", "Software"));
+            assertTrue(client.write("Alen", "Luca"));
+            assertTrue(client.write("Kaja", "Arjel"));
+
+            for (int i = 0; i < 11; i++) {
+                client.bind("127.0.0.1", 5000 + i);
+                assertEquals("Luca", client.read("Alen"));
+                assertEquals("Arjel", client.read("Kaja"));
+                assertEquals("Software", client.read("Distributed"));
+            }
+
         } catch(Exception e) {
             System.out.println(e);
             fail();
