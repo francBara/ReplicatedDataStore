@@ -1,3 +1,5 @@
+import Exceptions.QuorumNumberException;
+
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -24,7 +26,7 @@ public class DataStoreMain {
         if (choice.equals("A")) {
             try {
                 dsCommunication.initiateDataStore(5, 5);
-            } catch(IOException e) {
+            } catch(IOException | QuorumNumberException e) {
                 System.out.println("ERROR");
             }
         }

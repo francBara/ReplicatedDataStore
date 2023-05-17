@@ -10,13 +10,21 @@ import java.util.Set;
 
 
 public class Quorum {
-    private int writeQuorum;
-    private int readQuorum;
+    public final int writeQuorum;
+    public final int readQuorum;
+
+    //Enforcing a max number of replicas could imply concurrency problems
+    //public final int maxNumberOfReplicas;
     
 
-    public Quorum(int writeQuorum, int readQuorum) {
+    public Quorum(int writeQuorum, int readQuorum) throws QuorumNumberException {
+        if (writeQuorum <= 0 || readQuorum <= 0) {
+            throw(new QuorumNumberException());
+        }
+
         this.writeQuorum = writeQuorum;
         this.readQuorum = readQuorum;
+        //this.maxNumberOfReplicas = inferMaxReplicas();
     }
 
     /**
@@ -91,5 +99,17 @@ public class Quorum {
         }
 
         return currentReadElement;
+    }
+
+    private int inferMaxReplicas() {
+        int writeWriteConflicts = 2 * writeQuorum;
+        int readWriteConflicts = writeQuorum + readQuorum;
+
+        if (writeWriteConflicts < readWriteConflicts) {
+            return writeWriteConflicts - 1;
+        }
+        else {
+            return readWriteConflicts - 1;
+        }
     }
 }

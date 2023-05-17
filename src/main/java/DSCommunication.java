@@ -30,7 +30,7 @@ public class DSCommunication {
     /**
      * This replica starts a new data store
      */
-    public void initiateDataStore(int writeQuorum, int readQuorum) throws IOException {
+    public void initiateDataStore(int writeQuorum, int readQuorum) throws IOException, QuorumNumberException {
         quorum = new Quorum(writeQuorum, readQuorum);
         replicas = new Replicas();
         begin();
@@ -163,5 +163,9 @@ public class DSCommunication {
 
     public int getReplicasSize() {
         return replicas.size();
+    }
+
+    public Quorum getQuorum() {
+        return quorum;
     }
 }
