@@ -1,4 +1,4 @@
-package DataStoreState;
+package DataStore.DataStoreState;
 
 import java.util.HashMap;
 

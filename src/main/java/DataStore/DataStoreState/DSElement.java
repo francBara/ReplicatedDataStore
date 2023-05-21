@@ -1,4 +1,4 @@
-package DataStoreState;
+package DataStore.DataStoreState;
 
 /**
  * The element contained in a data store, referenced through a key

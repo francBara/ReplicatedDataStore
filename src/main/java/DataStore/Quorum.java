@@ -1,5 +1,7 @@
-import DataStoreState.DSElement;
-import Exceptions.QuorumNumberException;
+package DataStore;
+
+import DataStore.DataStoreState.DSElement;
+import DataStore.Exceptions.QuorumNumberException;
 import Message.Message;
 import Message.MessageType;
 import com.google.gson.Gson;
@@ -12,6 +14,7 @@ import java.util.Set;
 public class Quorum {
     public final int writeQuorum;
     public final int readQuorum;
+    public final int maxReplicas;
 
     //Enforcing a max number of replicas could imply concurrency problems
     //public final int maxNumberOfReplicas;
@@ -24,7 +27,7 @@ public class Quorum {
 
         this.writeQuorum = writeQuorum;
         this.readQuorum = readQuorum;
-        //this.maxNumberOfReplicas = inferMaxReplicas();
+        this.maxReplicas = inferMaxReplicas();
     }
 
     /**

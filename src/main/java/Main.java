@@ -1,4 +1,5 @@
-import Exceptions.QuorumNumberException;
+import DataStore.DataStoreNetwork;
+import DataStore.Exceptions.QuorumNumberException;
 
 import javax.swing.*;
 import java.awt.*;
@@ -7,7 +8,7 @@ import java.io.IOException;
 
 public class Main extends JFrame {
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Quorum-based replicated datastore");
+        JFrame frame = new JFrame("DataStore.Quorum-based replicated datastore");
         frame.setSize(300, 200);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JLabel label = new JLabel("Choose a port:");
@@ -37,7 +38,7 @@ public class Main extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 int port = Integer.parseInt(portInput.getText());
                 System.out.println("Pulsante premuto! " + port);
-                final DSCommunication dsCommunication = new DSCommunication(port);
+                final DataStoreNetwork dsCommunication = new DataStoreNetwork(port);
                 System.out.println("DS creato!");
                 try {
                     dsCommunication.initiateDataStore(5, 5);
@@ -52,7 +53,7 @@ public class Main extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 int port = Integer.parseInt(portInput.getText());
                 System.out.println("Pulsante premuto! " + port);
-                final DSCommunication dsCommunication = new DSCommunication(port);
+                final DataStoreNetwork dsCommunication = new DataStoreNetwork(port);
                 System.out.println("DS creato!");
                 label.setText("Insert IP:");
                 portInput.setText("127.0.0.1");

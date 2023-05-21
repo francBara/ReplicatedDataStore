@@ -1,4 +1,4 @@
-package Exceptions;
+package DataStore.Exceptions;
 
 public class QuorumNumberException extends Exception {
     private int expectedQuorum;
@@ -12,6 +12,6 @@ public class QuorumNumberException extends Exception {
 
     @Override
     public String toString() {
-        return "QuorumNumberException\nExpected Quorum: " + expectedQuorum + "\nActual Quorum: " + actualQuorum;
+        return "QuorumNumberException\nExpected DataStore.Quorum: " + expectedQuorum + "\nActual DataStore.Quorum: " + actualQuorum;
     }
 }

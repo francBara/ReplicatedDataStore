@@ -1,13 +1,15 @@
+import DataStore.DataStoreNetwork;
+import DataStore.Exceptions.FullDataStoreException;
 import junit.framework.TestCase;
-import org.junit.Test;
 
+import java.io.IOException;
 import java.util.HashSet;
 
 public class DistributedTest extends TestCase {
 
     public void testInitAndRead() {
-        final DSCommunication firstReplica = new DSCommunication(5000);
-        final HashSet<DSCommunication> replicasControllers = new HashSet<>();
+        final DataStoreNetwork firstReplica = new DataStoreNetwork(5000);
+        final HashSet<DataStoreNetwork> replicasControllers = new HashSet<>();
 
         new Thread(() -> {
             try {
@@ -25,7 +27,7 @@ public class DistributedTest extends TestCase {
             int finalI = i;
             new Thread(() -> {
                 try {
-                    final DSCommunication newReplica = new DSCommunication(5001 + finalI);
+                    final DataStoreNetwork newReplica = new DataStoreNetwork(5001 + finalI);
                     replicasControllers.add(newReplica);
                     newReplica.joinDataStore("127.0.0.1", 5000);
                 } catch(Exception e) {
@@ -38,6 +40,16 @@ public class DistributedTest extends TestCase {
             } catch(Exception ignored) {fail();}
         }
 
+        for (int i = 10; i < 30; i++) {
+            int finalI = i;
+            new Thread(() -> {
+                try {
+                    new DataStoreNetwork(5001 + finalI).joinDataStore("127.0.0.1", 5000);
+                    fail();
+                } catch(FullDataStoreException ignored) {} catch(IOException ignored) {fail();}
+            }).start();
+        }
+
         try {
             Thread.sleep(3000);
         } catch(Exception ignored) {fail();}
@@ -45,7 +57,7 @@ public class DistributedTest extends TestCase {
 
         //Every replica should retain 10 references to other replicas
         assertEquals(10, firstReplica.getReplicasSize());
-        for (DSCommunication replicaController : replicasControllers) {
+        for (DataStoreNetwork replicaController : replicasControllers) {
             assertEquals(10, replicaController.getReplicasSize());
         }
 
@@ -53,28 +65,26 @@ public class DistributedTest extends TestCase {
         client.bind("127.0.0.1", 5000);
 
         try {
-            boolean writeSuccessful = client.write("Alen", "Kaja");
+            assertTrue(client.write("Alen", "Kaja"));
 
-            assertTrue(writeSuccessful);
-
-            assertEquals("Kaja", client.read("Alen"));
+            for (int i = 0; i < 11; i++) {
+                client.bind("127.0.0.1", 5000 + i);
+                assertEquals("Kaja", client.read("Alen"));
+            }
 
             client.bind("127.0.0.1", 5001);
 
-            assertEquals("Kaja", client.read("Alen"));
-
             assertTrue(client.write("Kaja", "Alen"));
-
-            assertEquals("Alen", client.read("Kaja"));
-
-            client.bind("127.0.0.1", 5002);
-
-            assertEquals("Kaja", client.read("Alen"));
-            assertEquals("Alen", client.read("Kaja"));
-
             assertTrue(client.write("Distributed", "Systems"));
 
-            assertEquals("Systems", client.read("Distributed"));
+            for (int i = 0; i < 11; i++) {
+                client.bind("127.0.0.1", 5000 + i);
+                assertEquals("Alen", client.read("Kaja"));
+                assertEquals("Kaja", client.read("Alen"));
+                assertEquals("Systems", client.read("Distributed"));
+            }
+
+            client.bind("127.0.0.1", 5007);
 
             assertTrue(client.write("Distributed", "Software"));
             assertTrue(client.write("Alen", "Luca"));

@@ -1,7 +1,10 @@
-import DataStoreState.DSElement;
-import DataStoreState.DSState;
-import DataStoreState.DSStateException;
-import Exceptions.QuorumNumberException;
+package DataStore;
+import DataStore.DataStoreState.DSState;
+import DataStore.RequestsHandler.CoordinatorHandler;
+import DataStore.RequestsHandler.PeerHandler;
+import DataStore.RequestsHandler.RequestsHandler;
+import DataStore.Exceptions.FullDataStoreException;
+import DataStore.Exceptions.QuorumNumberException;
 import Message.Message;
 import Message.MessageType;
 import com.google.gson.Gson;
@@ -16,14 +19,16 @@ import java.util.concurrent.Executors;
 /**
  * Keeps the main methods for the replica, handling initialization, settings and communication
  */
-public class DSCommunication {
+public class DataStoreNetwork {
     private final int port;
 
     private Replicas replicas;
     private final DSState dsState = new DSState();
     private Quorum quorum;
 
-    public DSCommunication(int port) {
+    private RequestsHandler requestsHandler;
+
+    public DataStoreNetwork(int port) {
         this.port = port;
     }
 
@@ -33,6 +38,7 @@ public class DSCommunication {
     public void initiateDataStore(int writeQuorum, int readQuorum) throws IOException, QuorumNumberException {
         quorum = new Quorum(writeQuorum, readQuorum);
         replicas = new Replicas();
+        requestsHandler = new CoordinatorHandler(replicas, quorum, dsState, port);
         begin();
     }
 
@@ -51,12 +57,25 @@ public class DSCommunication {
 
         writer.println(message.toJson());
 
+        final MessageType joinApproved = MessageType.valueOf(scanner.nextLine());
+
+        if (joinApproved == MessageType.KO) {
+            //TODO: Display error
+            /*
+            This error is thrown when there are too many replicas in the data store,
+            or when the contacted replica is not the coordinator.
+            */
+            throw(new FullDataStoreException());
+        }
+
         final Gson gson = new Gson();
 
         replicas = gson.fromJson(scanner.nextLine(), Replicas.class);
         replicas.addReplica(new Replica(socket.getInetAddress().toString().substring(1), scanner.nextInt()));
         scanner.nextLine();
         quorum = gson.fromJson(scanner.nextLine(), Quorum.class);
+
+        requestsHandler = new PeerHandler(replicas, quorum, dsState, port);
 
         try {
             socket.close();
@@ -94,65 +113,22 @@ public class DSCommunication {
                 final Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
 
                 if (message.messageType == MessageType.Join) {
-                    synchronized (this) {
-                        final Gson gson = new Gson();
-                        writer.println(gson.toJson(replicas));
-                        writer.println(port);
-                        writer.println(gson.toJson(quorum));
-
-                        final Replica replica = new Replica(clientSocket.getInetAddress().toString().substring(1), message.getPort());
-
-                        //The new replica is sent to other replicas
-                        replicas.updateReplicas(replica);
-                        replicas.addReplica(replica);
-                    }
+                    requestsHandler.handleJoin(clientSocket, writer, message);
                 }
                 else if (message.messageType == MessageType.ReplicasUpdate) {
-                    replicas.addReplica(new Gson().fromJson(scanner.nextLine(), Replica.class));
-                    //System.out.println(this + "Current replicas: " + replicas.size());
+                    requestsHandler.handleReplicasUpdate(scanner);
                 }
                 else if (message.messageType == MessageType.Read) {
-                    try {
-                        //This replica starts a read quorum
-                        final DSElement dsElement = quorum.initReadQuorum(message, replicas);
-
-                        //This replica sends the most recent value to the client
-                        writer.println(dsElement.getValue());
-                    } catch(IOException | QuorumNumberException e) {
-                        //TODO: Handle high quorum exception
-                        System.out.println("Read error: " + e);
-                        writer.println(new Message(MessageType.KO).toJson());
-                    }
+                    requestsHandler.handleRead(writer, message);
                 }
                 else if (message.messageType == MessageType.ReadQuorum) {
-                    try {
-                        //This replica replies to the read quorum with its version of the requested element
-                        DSElement dsElement = dsState.read(message.getKey());
-                        writer.println(new Gson().toJson(dsElement));
-                    } catch(DSStateException e) {
-                        writer.println(new Message(MessageType.KO).toJson());
-                    }
+                    requestsHandler.handleReadQuorum(writer, message);
                 }
                 else if (message.messageType == MessageType.Write) {
-                    try {
-                        //This replica starts a write quorum
-                        final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
-
-                        writer.println(new Message(quorumApproved ? MessageType.OK : MessageType.KO).toJson());
-                    } catch(IOException | QuorumNumberException e) {
-                        //TODO: Handle high quorum exception
-                        System.out.println("Write error: " + e);
-                        writer.println(new Message(MessageType.KO).toJson());
-                    }
+                    requestsHandler.handleWrite(writer, message);
                 }
                 else if (message.messageType == MessageType.WriteQuorum) {
-                    try {
-                        //TODO: Is this the right way to do it? should there be more checks?
-                        dsState.write(message.getKey(), message.getValue());
-                        writer.println(new Message(MessageType.OK).toJson());
-                    } catch(DSStateException e) {
-                        writer.println(new Message(MessageType.KO).toJson());
-                    }
+                    requestsHandler.handleWriteQuorum(writer, message);
                 }
                 try {
                     clientSocket.close();

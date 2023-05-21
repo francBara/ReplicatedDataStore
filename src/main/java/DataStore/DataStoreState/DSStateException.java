@@ -1,4 +1,4 @@
-package DataStoreState;
+package DataStore.DataStoreState;
 
 public class DSStateException extends Exception {
 
