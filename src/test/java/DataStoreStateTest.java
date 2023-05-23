@@ -16,8 +16,8 @@ public class DataStoreStateTest extends TestCase {
                 state.write("Distributed", "Software" + i, 0);
                 assertEquals("Distributed" + i, state.read("Alen").getValue());
                 assertEquals("Software" + i, state.read("Distributed").getValue());
-                assertEquals(i, state.read("Alen").getVersionNumber());
-                assertEquals(i, state.read("Distributed").getVersionNumber());
+                assertEquals(i + 1, state.read("Alen").getVersionNumber());
+                assertEquals(i + 1, state.read("Distributed").getVersionNumber());
             }
 
         } catch(DSStateException e) {

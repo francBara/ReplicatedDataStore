@@ -8,6 +8,8 @@ import DataStore.Exceptions.QuorumNumberException;
 import Message.Message;
 import Message.MessageType;
 import com.google.gson.Gson;
+
+import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -20,7 +22,7 @@ import java.util.concurrent.Executors;
  * Keeps the main methods for the replica, handling initialization, settings and communication
  */
 public class DataStoreNetwork {
-    private final int port;
+    private int port;
 
     private Replicas replicas;
     private final DSState dsState = new DSState();
@@ -31,6 +33,7 @@ public class DataStoreNetwork {
     public DataStoreNetwork(int port) {
         this.port = port;
     }
+    public DataStoreNetwork() {}
 
     /**
      * This replica starts a new data store
@@ -138,11 +141,11 @@ public class DataStoreNetwork {
         }
     }
 
-    public int getReplicasSize() {
-        return replicas.size();
+    public void setPort(int port) {
+        this.port = port;
     }
 
-    public Quorum getQuorum() {
-        return quorum;
+    public int getReplicasSize() {
+        return replicas.size();
     }
 }

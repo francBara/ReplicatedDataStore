@@ -17,7 +17,8 @@ public class DataStoreMain {
         // TODO: writeQuorum and readQuorum are hardcoded. They should be chosen by the user
         // I CREATED TWO FUNCTIONS:  chooseInt to choose port, wQuorum and rQuorum, then chooseRole to initialize or join a datastore
 
-        final DataStoreNetwork dsCommunication = new DataStoreNetwork(port);
+        final DataStoreNetwork dsCommunication = new DataStoreNetwork();
+        dsCommunication.setPort(port);
 
         String choice = chooseRole(scanner);
 

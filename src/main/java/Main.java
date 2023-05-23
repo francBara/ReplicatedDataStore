@@ -38,7 +38,8 @@ public class Main extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 int port = Integer.parseInt(portInput.getText());
                 System.out.println("Pulsante premuto! " + port);
-                final DataStoreNetwork dsCommunication = new DataStoreNetwork(port);
+                final DataStoreNetwork dsCommunication = new DataStoreNetwork();
+                dsCommunication.setPort(port);
                 System.out.println("DS creato!");
                 try {
                     dsCommunication.initiateDataStore(5, 5);
@@ -53,7 +54,8 @@ public class Main extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 int port = Integer.parseInt(portInput.getText());
                 System.out.println("Pulsante premuto! " + port);
-                final DataStoreNetwork dsCommunication = new DataStoreNetwork(port);
+                final DataStoreNetwork dsCommunication = new DataStoreNetwork();
+                dsCommunication.setPort(port);
                 System.out.println("DS creato!");
                 label.setText("Insert IP:");
                 portInput.setText("127.0.0.1");

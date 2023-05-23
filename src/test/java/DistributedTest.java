@@ -8,7 +8,8 @@ import java.util.HashSet;
 public class DistributedTest extends TestCase {
 
     public void testInitAndRead() {
-        final DataStoreNetwork firstReplica = new DataStoreNetwork(5000);
+        final DataStoreNetwork firstReplica = new DataStoreNetwork();
+        firstReplica.setPort(5000);
         final HashSet<DataStoreNetwork> replicasControllers = new HashSet<>();
 
         new Thread(() -> {
@@ -27,7 +28,8 @@ public class DistributedTest extends TestCase {
             int finalI = i;
             new Thread(() -> {
                 try {
-                    final DataStoreNetwork newReplica = new DataStoreNetwork(5001 + finalI);
+                    final DataStoreNetwork newReplica = new DataStoreNetwork();
+                    newReplica.setPort(5001 + finalI);
                     replicasControllers.add(newReplica);
                     newReplica.joinDataStore("127.0.0.1", 5000);
                 } catch(Exception e) {
