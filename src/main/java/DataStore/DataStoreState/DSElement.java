@@ -5,11 +5,12 @@ package DataStore.DataStoreState;
  */
 public class DSElement {
     private String value;
-    private int versionNumber;
+    private int versionNumber = 0;
+    protected boolean isNull = false;
 
-    public DSElement(String value) {
+    public DSElement(String value, int versionNumber) {
         this.value = value;
-        this.versionNumber = 0;
+        this.versionNumber = versionNumber;
     }
 
     public String getValue() {
@@ -24,7 +25,24 @@ public class DSElement {
         return versionNumber;
     }
 
-    synchronized public void incrementVersionNumber() {
-        versionNumber++;
+    public boolean isNull() {
+        return isNull;
+    }
+
+    synchronized public void setVersionNumber(int versionNumber) {
+        if (versionNumber > this.versionNumber) {
+            this.versionNumber = versionNumber + 1;
+        }
+        else {
+            this.versionNumber++;
+        }
+    }
+
+    @Override
+    public String toString() {
+        if (isNull) {
+            return "null value\nv: NA";
+        }
+        return value + "\nv: " + versionNumber;
     }
 }

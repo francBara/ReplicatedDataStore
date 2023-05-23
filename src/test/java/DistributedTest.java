@@ -55,7 +55,7 @@ public class DistributedTest extends TestCase {
         } catch(Exception ignored) {fail();}
 
 
-        //Every replica should retain 10 references to other replicas
+        //Every replica should retain 9 references to other replicas
         assertEquals(10, firstReplica.getReplicasSize());
         for (DataStoreNetwork replicaController : replicasControllers) {
             assertEquals(10, replicaController.getReplicasSize());
@@ -69,7 +69,8 @@ public class DistributedTest extends TestCase {
 
             for (int i = 0; i < 11; i++) {
                 client.bind("127.0.0.1", 5000 + i);
-                assertEquals("Kaja", client.read("Alen"));
+                assertTrue(client.read("alskjd").isNull());
+                assertEquals("Kaja", client.read("Alen").getValue());
             }
 
             client.bind("127.0.0.1", 5001);
@@ -79,9 +80,9 @@ public class DistributedTest extends TestCase {
 
             for (int i = 0; i < 11; i++) {
                 client.bind("127.0.0.1", 5000 + i);
-                assertEquals("Alen", client.read("Kaja"));
-                assertEquals("Kaja", client.read("Alen"));
-                assertEquals("Systems", client.read("Distributed"));
+                assertEquals("Alen", client.read("Kaja").getValue());
+                assertEquals("Kaja", client.read("Alen").getValue());
+                assertEquals("Systems", client.read("Distributed").getValue());
             }
 
             client.bind("127.0.0.1", 5007);
@@ -92,9 +93,9 @@ public class DistributedTest extends TestCase {
 
             for (int i = 0; i < 11; i++) {
                 client.bind("127.0.0.1", 5000 + i);
-                assertEquals("Luca", client.read("Alen"));
-                assertEquals("Arjel", client.read("Kaja"));
-                assertEquals("Software", client.read("Distributed"));
+                assertEquals("Luca", client.read("Alen").getValue());
+                assertEquals("Arjel", client.read("Kaja").getValue());
+                assertEquals("Software", client.read("Distributed").getValue());
             }
 
         } catch(Exception e) {

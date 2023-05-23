@@ -57,6 +57,7 @@ public class DataStoreNetwork {
 
         writer.println(message.toJson());
 
+        //TODO: Handle IllegalArgumentException
         final MessageType joinApproved = MessageType.valueOf(scanner.nextLine());
 
         if (joinApproved == MessageType.KO) {

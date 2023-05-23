@@ -41,7 +41,7 @@ public abstract class RequestsHandler {
             final DSElement dsElement = quorum.initReadQuorum(message, replicas);
 
             //This replica sends the most recent value to the client
-            writer.println(dsElement.getValue());
+            writer.println(new Gson().toJson(dsElement));
         } catch(IOException | QuorumNumberException e) {
             //TODO: Handle high quorum exception
             System.out.println("Read error: " + e);
@@ -61,20 +61,29 @@ public abstract class RequestsHandler {
 
     public void handleWrite(PrintWriter writer, Message message) {
         try {
+            //Reads the value to write, if it already exists, the version number is propagated
+            final Message readMessage = new Message(MessageType.Read);
+            readMessage.setKey(message.getKey());
+            final DSElement dsElement = quorum.initReadQuorum(readMessage, replicas);
+
+            if (!dsElement.isNull()) {
+                message.setVersionNumber(dsElement.getVersionNumber());
+            }
+
             //This replica starts a write quorum
             final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
 
             writer.println(new Message(quorumApproved ? MessageType.OK : MessageType.KO).toJson());
         } catch(IOException | QuorumNumberException e) {
             //TODO: Handle high quorum exception
-            System.out.println("Write error: " + e);
+            System.out.println(e);
             writer.println(new Message(MessageType.KO).toJson());
         }
     }
 
     public void handleWriteQuorum(PrintWriter writer, Message message) {
         try {
-            dsState.write(message.getKey(), message.getValue());
+            dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
             writer.println(new Message(MessageType.OK).toJson());
         } catch(DSStateException e) {
             writer.println(new Message(MessageType.KO).toJson());

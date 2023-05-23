@@ -17,7 +17,11 @@ public class DSState {
      */
     public synchronized DSElement read(String key) throws DSStateException {
         //TODO: Should manage the case in which an element is not stored in the state, maybe with an exception
-        return dataStore.get(key);
+        final DSElement dsElement = dataStore.get(key);
+        if (dsElement == null) {
+            return new DSNullElement();
+        }
+        return dsElement;
     }
 
     /**
@@ -26,14 +30,14 @@ public class DSState {
      * @param value
      * @throws DSStateException If some internal error occurs during writing
      */
-    public synchronized void write(String key, String value) throws DSStateException {
+    public synchronized void write(String key, String value, int versionNumber) throws DSStateException {
         if (dataStore.containsKey(key)) {
             DSElement dsElement = dataStore.get(key);
             dsElement.setValue(value);
-            dsElement.incrementVersionNumber();
+            dsElement.setVersionNumber(versionNumber);
         }
         else {
-            dataStore.put(key, new DSElement(value));
+            dataStore.put(key, new DSElement(value, versionNumber + 1));
         }
     }
 }

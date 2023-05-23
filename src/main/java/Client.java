@@ -1,3 +1,4 @@
+import DataStore.DataStoreState.DSElement;
 import Message.Message;
 import Message.MessageType;
 import com.google.gson.Gson;
@@ -16,7 +17,7 @@ public class Client {
         this.dataStorePort = port;
     }
 
-    public String read(String key) throws IOException {
+    public DSElement read(String key) throws IOException {
         final Socket socket = new Socket(dataStoreAddress, dataStorePort);
         final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
         final Scanner scanner = new Scanner(socket.getInputStream());
@@ -28,7 +29,7 @@ public class Client {
 
         //TODO: Handle when reply is a KO message
 
-        final String readValue = scanner.nextLine();
+        final DSElement readValue = new Gson().fromJson(scanner.nextLine(), DSElement.class);
 
         socket.close();
 

@@ -1,6 +1,7 @@
 package DataStore;
 
 import DataStore.DataStoreState.DSElement;
+import DataStore.DataStoreState.DSNullElement;
 import DataStore.Exceptions.QuorumNumberException;
 import Message.Message;
 import Message.MessageType;
@@ -76,7 +77,7 @@ public class Quorum {
         if (readQuorum > replicas.size()) {
             throw(new QuorumNumberException(readQuorum, replicas.size()));
         }
-        else if (message.messageType != MessageType.Read) {
+        else if (message.getType() != MessageType.Read) {
             throw(new RuntimeException());
         }
 
@@ -86,26 +87,31 @@ public class Quorum {
 
         Scanner scanner;
         final Gson gson = new Gson();
-        DSElement currentReadElement = null;
+        DSElement currentReadElement = new DSNullElement();
 
         for (Socket socket : quorumReplicas) {
             //TODO: Should implement timeouts
             scanner = new Scanner(socket.getInputStream());
 
             DSElement readElement = gson.fromJson(scanner.nextLine(), DSElement.class);
+            //System.out.println(readElement);
 
-            if (readElement != null && (currentReadElement == null || readElement.getVersionNumber() > currentReadElement.getVersionNumber())) {
+            if (!readElement.isNull() && (currentReadElement.isNull() || readElement.getVersionNumber() > currentReadElement.getVersionNumber())) {
                 currentReadElement = readElement;
             }
 
             socket.close();
         }
 
+        System.out.println("\n");
+
         return currentReadElement;
     }
 
     private int inferMaxReplicas() {
+        //NW > N / 2
         int writeWriteConflicts = 2 * writeQuorum;
+        //NR + NW > N
         int readWriteConflicts = writeQuorum + readQuorum;
 
         if (writeWriteConflicts < readWriteConflicts) {

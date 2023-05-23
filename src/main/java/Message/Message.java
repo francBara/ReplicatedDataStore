@@ -1,12 +1,12 @@
 package Message;
-
 import com.google.gson.Gson;
 
-import java.awt.image.ReplicateScaleFilter;
 
 public class Message {
     private String key;
     private String value;
+    private int versionNumber;
+
     private int port;
 
     public MessageType messageType;
@@ -45,6 +45,14 @@ public class Message {
 
     public MessageType getType() {
         return messageType;
+    }
+
+    public int getVersionNumber() {
+        return versionNumber;
+    }
+
+    public void setVersionNumber(int versionNumber) {
+        this.versionNumber = versionNumber;
     }
 
     public void setQuorum() {
