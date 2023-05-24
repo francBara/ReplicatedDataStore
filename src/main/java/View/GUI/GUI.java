@@ -1,4 +1,4 @@
-package view;
+package View.GUI;
 
 public class GUI {
 

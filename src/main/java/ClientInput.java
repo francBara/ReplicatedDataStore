@@ -1,3 +1,6 @@
+import DataStore.DataStoreState.DSElement;
+import View.CLI.InputValidation;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,16 +10,7 @@ public class ClientInput {
 
     private Client client;
     private BufferedReader input;
-    private final String welcomeMessage = "Welcome to the DataStore! Here you can store and retrieve data.\n";
-    private final String actionMessage = "Perform a read by typing 'read' or a write by typing 'write'.\nType 'help' for the list of possible actions.\n";
-    private final String helpMessage = """
-                Here is the list of possible actions:
-                'read': allows to read the value of the key you provide
-                'write': allows to write the value of the key you provide
-                'exit': allows to disconnect from the DataStore""";
-    private final String errorMessage = "Cannot handle this operation!";
-    private final String disconnect = "Are you sure you want to disconnect? (yes/no) \n> ";
-
+    private boolean connected;
 
     public static void main(String[] args) {
         ClientInput main = new ClientInput();
@@ -24,27 +18,22 @@ public class ClientInput {
     }
 
     private void start(){
-        input =  new BufferedReader(new InputStreamReader(System.in));
         client = new Client();
+        input =  new BufferedReader(new InputStreamReader(System.in));
+        connected = false;
+        System.out.println("\nWelcome to the DataStore! Here you can store and retrieve data.\n");
 
-        // TODO: HANDLE THE BINDING OF THE CLIENT WITH OK OR KO MESSAGES
-        client.bind("127.0.0.1",5000);
-
-
-        showMessage(welcomeMessage);
-        showMessage(actionMessage);
-
-        Thread mainThread = new Thread(() -> {
+        new Thread(() -> {
                     do {
-                        String s = nextLine("> ");
-                        readInput(s);
+                        if (connected){
+                            String s = nextLine("> ");
+                            readInput(s);
+                        }
+                        else {
+                            connect();
+                        }
                     } while (true);
-                });
-        mainThread.start();
-    }
-
-    private void showMessage(String str){
-        System.out.println(str);
+        }).start();
     }
 
     private String nextLine(String str)
@@ -59,42 +48,86 @@ public class ClientInput {
         return s;
     }
 
+    private void connect(){
+        System.out.println("Connection phase");
+        InputValidation validation = new InputValidation();
+
+        boolean isValidIp = false;
+        boolean isValidPort = false;
+        String dataStoreIp = "";
+        String dataStorePort = "";
+
+        while(!(isValidIp && isValidPort)) {
+            dataStoreIp = nextLine("Please provide the IP address of the datastore\n> ");
+
+            isValidIp = validation.validateIp(dataStoreIp);
+            if(!isValidIp){
+                System.out.println("Please enter a valid ip address.");
+                continue;
+            }
+
+            dataStorePort = nextLine("Please provide the port number of the datastore\n> ");
+            isValidPort = validation.validateInt(dataStorePort);
+
+            if(!isValidPort){
+                System.out.println("Please enter a valid integer.");
+            }
+        }
+
+        client.bind(dataStoreIp, Integer.parseInt(dataStorePort));
+        System.out.println("Connected at "+ dataStoreIp +": "+ Integer.parseInt(dataStorePort)+ "\n");
+
+        System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
+        connected = true;
+    }
+
     private void readInput(String input) {
         input = input.toUpperCase(Locale.ROOT);
 
         switch (input) {
             case "WRITE" -> {
-
                 String key = nextLine("Insert the key: ");
                 String value = nextLine("Insert the value: ");
                 try {
                     client.write(key, value);
+                    System.out.println("Write executed");
                 } catch (IOException e) {
-                    System.out.println("FATAL ERROR");
+                    System.out.println("Operation failed");
                 }
             }
             case "READ" -> {
-
                 String key = nextLine("Key to read from:");
                 try {
-                    client.read(key);
+                    DSElement dsElement = client.read(key);
+                    System.out.println(dsElement);
+                    System.out.println("Read executed");
                 } catch (IOException e) {
-                    System.out.println("FATAL ERROR");
+                    System.out.println("Operation failed");
                 }
             }
-            case "HELP" -> showMessage(helpMessage);
-            case "EXIT" -> {
-                String key = nextLine(disconnect);
-                if (key.equals("yes")) {
-                    System.out.println("disconnecting...");
-                } else if (key.equals("no")) {
-                    System.out.println(actionMessage);
-                } else {
-                    System.out.println(errorMessage);
-                }
-            }
-            default -> System.out.println(errorMessage);
-        }
+            case "HELP" -> System.out.println("""
+                Here is the list of possible actions:
+                'read': allows to read the value of the key you provide
+                'write': allows to write the value of the key you provide
+                'exit': allows to disconnect from the DataStore""");
 
+            case "EXIT" -> {
+                String key = nextLine("Are you sure you want to disconnect? (y/n)\n> ");
+                if (key.equals("y")) {
+                    System.out.println("disconnecting...\n");
+                    connected = false;
+                    // TODO: handle the un-binding of the client
+                    client.bind("",0);
+                } else if (key.equals("n")) {
+                    System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
+                } else {
+                    System.out.println("Cannot handle this operation!\n");
+                }
+            }
+            default -> {
+                System.out.println("Cannot handle this operation!\n");
+                System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
+            }
+        }
     }
 }
