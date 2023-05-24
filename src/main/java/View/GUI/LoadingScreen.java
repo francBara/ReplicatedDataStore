@@ -7,7 +7,7 @@ public class LoadingScreen extends LayoutManager {
     public LoadingScreen(String title, String topText, String bottomText) {
         super(title, topText, bottomText);
 
-        ImageIcon originalIcon = new ImageIcon("src/resources/Images/ds.png");
+        ImageIcon originalIcon = new ImageIcon("src/main/resources/Images/ds.png");
         Image originalImage = originalIcon.getImage();
 
         JLabel imageLabel = new JLabel() {

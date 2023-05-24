@@ -20,7 +20,7 @@ public class LayoutManager extends JFrame {
     protected String title;
     protected String topText;
     protected String bottomText;
-    protected String fontPath = "src/resources/Montserrat/static/Montserrat-ExtraBold.ttf";
+    protected String fontPath = "src/main/resources/Montserrat/static/Montserrat-ExtraBold.ttf";
 
     protected ArrayList<JButton> buttonList;
 
