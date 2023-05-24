@@ -29,7 +29,9 @@ public abstract class RequestsHandler {
         this.port = port;
     }
 
-    abstract public void handleJoin(Socket clientSocket, PrintWriter writer, Message message);
+    abstract public void ackCoordinator() throws IOException;
+
+    abstract public void handleJoin(Socket clientSocket, PrintWriter writer, Scanner scanner, Message message);
 
     public void handleReplicasUpdate(Scanner scanner) {
         replicas.addReplica(new Gson().fromJson(scanner.nextLine(), Replica.class));

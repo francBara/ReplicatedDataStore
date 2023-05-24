@@ -64,7 +64,7 @@ public class DataStoreNetwork {
         final MessageType joinApproved = MessageType.valueOf(scanner.nextLine());
 
         if (joinApproved == MessageType.KO) {
-            //TODO: Display error
+            //TODO: Handle FullDataStoreException
             /*
             This error is thrown when there are too many replicas in the data store,
             or when the contacted replica is not the coordinator.
@@ -79,11 +79,7 @@ public class DataStoreNetwork {
         scanner.nextLine();
         quorum = gson.fromJson(scanner.nextLine(), Quorum.class);
 
-        requestsHandler = new PeerHandler(replicas, quorum, dsState, port);
-
-        try {
-            socket.close();
-        } catch(IOException ignored) {}
+        requestsHandler = new PeerHandler(replicas, quorum, dsState, port, socket);
 
         begin();
     }
@@ -95,6 +91,9 @@ public class DataStoreNetwork {
     private void begin() throws IOException  {
         final ServerSocket serverSocket = new ServerSocket(port);
         final ExecutorService executor = Executors.newCachedThreadPool();
+
+        //If a peer, notifies the coordinator to be ready to receive requests
+        requestsHandler.ackCoordinator();
 
         while (true) {
             //For every open connection, a new thread starts
@@ -117,7 +116,7 @@ public class DataStoreNetwork {
                 final Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
 
                 if (message.messageType == MessageType.Join) {
-                    requestsHandler.handleJoin(clientSocket, writer, message);
+                    requestsHandler.handleJoin(clientSocket, writer, scanner, message);
                 }
                 else if (message.messageType == MessageType.ReplicasUpdate) {
                     requestsHandler.handleReplicasUpdate(scanner);

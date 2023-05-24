@@ -45,4 +45,12 @@ public class DSElement {
         }
         return value + "\nv: " + versionNumber;
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof DSElement otherElement)) {
+            return false;
+        }
+        return value.equals(otherElement.value) && versionNumber == otherElement.getVersionNumber() && isNull == otherElement.isNull();
+    }
 }

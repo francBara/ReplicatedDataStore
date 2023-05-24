@@ -8,8 +8,10 @@ import Message.Message;
 import Message.MessageType;
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class CoordinatorHandler extends RequestsHandler {
     public CoordinatorHandler(Replicas replicas, Quorum quorum, DSState dsState, int port) {
@@ -17,8 +19,14 @@ public class CoordinatorHandler extends RequestsHandler {
     }
 
     @Override
-    public void handleJoin(Socket clientSocket, PrintWriter writer, Message message) {
+    public void ackCoordinator() throws IOException {
+
+    }
+
+    @Override
+    public void handleJoin(Socket clientSocket, PrintWriter writer, Scanner scanner, Message message) {
         synchronized (this) {
+
             if (replicas.size() >= quorum.maxReplicas - 1) {
                 writer.println(MessageType.KO);
                 return;
@@ -29,6 +37,10 @@ public class CoordinatorHandler extends RequestsHandler {
             writer.println(gson.toJson(replicas));
             writer.println(port);
             writer.println(gson.toJson(quorum));
+
+            if (!MessageType.valueOf(scanner.nextLine()).equals(MessageType.OK)) {
+                return;
+            }
 
             final Replica replica = new Replica(clientSocket.getInetAddress().toString().substring(1), message.getPort());
 

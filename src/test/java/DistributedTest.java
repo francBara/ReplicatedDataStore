@@ -24,12 +24,13 @@ public class DistributedTest extends TestCase {
             Thread.sleep(500);
         } catch(Exception ignored) {fail();}
 
+        assertEquals(0, firstReplica.getReplicasSize());
+
         for (int i = 0; i < 10; i++) {
             int finalI = i;
             new Thread(() -> {
                 try {
-                    final DataStoreNetwork newReplica = new DataStoreNetwork();
-                    newReplica.setPort(5001 + finalI);
+                    final DataStoreNetwork newReplica = new DataStoreNetwork(5001 + finalI);
                     replicasControllers.add(newReplica);
                     newReplica.joinDataStore("127.0.0.1", 5000);
                 } catch(Exception e) {
@@ -37,10 +38,11 @@ public class DistributedTest extends TestCase {
                     fail();
                 }
             }).start();
-            try {
-                Thread.sleep(400);
-            } catch(Exception ignored) {fail();}
         }
+
+        try {
+            Thread.sleep(1000);
+        } catch(Exception ignored) {fail();}
 
         for (int i = 10; i < 30; i++) {
             int finalI = i;
