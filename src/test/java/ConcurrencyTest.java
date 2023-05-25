@@ -25,6 +25,8 @@ public class ConcurrencyTest extends TestCase {
         for (int i = 0; i < 20; i++) {
             replicas.add(new DataStoreNetwork(6001 + i));
         }
+
+        //All replicas join concurrently
         for (DataStoreNetwork ds : replicas) {
             new Thread(() -> {
                 try {
@@ -49,6 +51,7 @@ public class ConcurrencyTest extends TestCase {
             clients.add(client);
         }
 
+        //All clients write concurrently
         int i = 0;
         for (Client client: clients) {
             int finalI = i;
@@ -64,6 +67,7 @@ public class ConcurrencyTest extends TestCase {
 
         delay(2);
 
+        //All clients read the same value concurrently
         try {
             DSElement readValue = clients.get(0).read("Key");
 
