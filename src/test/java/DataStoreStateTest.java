@@ -1,6 +1,6 @@
-import DataStore.DataStoreState.DSNullElement;
-import DataStore.DataStoreState.DSState;
-import DataStore.DataStoreState.DSStateException;
+import it.polimi.ds.DataStore.DataStoreState.DSNullElement;
+import it.polimi.ds.DataStore.DataStoreState.DSState;
+import it.polimi.ds.DataStore.DataStoreState.DSStateException;
 import junit.framework.TestCase;
 
 public class DataStoreStateTest extends TestCase {

@@ -1,5 +1,6 @@
-import DataStore.DataStoreNetwork;
-import DataStore.Exceptions.FullDataStoreException;
+import it.polimi.ds.DataStore.DataStoreNetwork;
+import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
+import it.polimi.ds.Client;
 import junit.framework.TestCase;
 
 import java.io.IOException;

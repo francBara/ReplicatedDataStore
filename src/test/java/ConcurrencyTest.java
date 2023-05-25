@@ -1,6 +1,7 @@
-import DataStore.DataStoreNetwork;
-import DataStore.DataStoreState.DSElement;
-import DataStore.Exceptions.QuorumNumberException;
+import it.polimi.ds.DataStore.DataStoreNetwork;
+import it.polimi.ds.DataStore.DataStoreState.DSElement;
+import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
+import it.polimi.ds.Client;
 import junit.framework.TestCase;
 
 import java.io.IOException;
