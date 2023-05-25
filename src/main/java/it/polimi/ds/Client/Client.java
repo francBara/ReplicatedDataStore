@@ -54,4 +54,21 @@ public class Client {
 
         return reply.messageType == MessageType.OK;
     }
+
+    /**
+     * Writes the value concurrently in multiple threads
+     * @param count
+     * @param key
+     * @param value
+     */
+    public void writeMany(int count, String key, String value) {
+        for (int i = 0; i < count; i++) {
+            int finalI = i;
+            new Thread(() -> {
+                try {
+                    write(key, value + finalI);
+                } catch (IOException ignored) {}
+            }).start();
+        }
+    }
 }
