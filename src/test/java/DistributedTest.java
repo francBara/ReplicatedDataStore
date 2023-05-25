@@ -17,6 +17,7 @@ public class DistributedTest extends TestCase {
             try {
                 firstReplica.initiateDataStore(6, 6);
             } catch(Exception ignored) {
+                System.out.println(ignored);
                 fail();
             }
         }).start();

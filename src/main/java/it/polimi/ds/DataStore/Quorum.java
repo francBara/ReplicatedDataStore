@@ -26,7 +26,7 @@ public class Quorum {
             throw(new QuorumNumberException());
         }
 
-        final int maxReplicas = inferMaxReplicas();
+        final int maxReplicas = inferMaxReplicas(writeQuorum, readQuorum);
 
         if (maxReplicas <= 0) {
             throw(new QuorumNumberException());
@@ -108,7 +108,7 @@ public class Quorum {
         return currentReadElement;
     }
 
-    private int inferMaxReplicas() {
+    private int inferMaxReplicas(int writeQuorum, int readQuorum) {
         //NW > N / 2
         int writeWriteConflicts = 2 * writeQuorum;
         //NR + NW > N
