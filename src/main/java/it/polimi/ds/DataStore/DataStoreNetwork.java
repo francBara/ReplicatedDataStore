@@ -143,6 +143,10 @@ public class DataStoreNetwork {
         this.port = port;
     }
 
+    public Quorum getQuorum() {
+        return quorum;
+    }
+
     public int getReplicasSize() {
         return replicas.size();
     }

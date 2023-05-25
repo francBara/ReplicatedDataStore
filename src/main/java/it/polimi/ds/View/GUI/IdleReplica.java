@@ -17,6 +17,7 @@ public class IdleReplica extends LayoutManager{
         transition(point, size);
 
         dsCommunication = new DataStoreNetwork();
+        //TODO: Insert server port
         dsCommunication.setPort(port);
 
         JLabel label = new JLabel();
@@ -45,6 +46,7 @@ public class IdleReplica extends LayoutManager{
 
             new Thread(() -> {
                 try {
+                    //TODO: Remove hardcoded value
                     dsCommunication.joinDataStore(ip, 5000);
                 } catch (IOException e) {
                     throw new RuntimeException(e);

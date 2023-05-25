@@ -1,6 +1,6 @@
 import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
-import it.polimi.ds.Client;
+import it.polimi.ds.Client.Client;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -76,6 +76,7 @@ public class DistributedTest extends TestCase {
                 client.bind("127.0.0.1", 5000 + i);
                 assertTrue(client.read("alskjd").isNull());
                 assertEquals("Kaja", client.read("Alen").getValue());
+                assertEquals(1, client.read("Alen").getVersionNumber());
             }
 
             client.bind("127.0.0.1", 5001);

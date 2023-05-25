@@ -26,9 +26,15 @@ public class Quorum {
             throw(new QuorumNumberException());
         }
 
+        final int maxReplicas = inferMaxReplicas();
+
+        if (maxReplicas <= 0) {
+            throw(new QuorumNumberException());
+        }
+
         this.writeQuorum = writeQuorum;
         this.readQuorum = readQuorum;
-        this.maxReplicas = inferMaxReplicas();
+        this.maxReplicas = maxReplicas;
     }
 
     /**
@@ -38,10 +44,7 @@ public class Quorum {
      * @return True if most replicas wrote successfully, false if not
      */
     public boolean initWriteQuorum(Message message, Replicas replicas) throws IOException, QuorumNumberException {
-        if (writeQuorum > replicas.size()) {
-            throw(new QuorumNumberException(writeQuorum, replicas.size()));
-        }
-        else if (message.messageType != MessageType.Write) {
+        if (message.messageType != MessageType.Write) {
             throw(new RuntimeException());
         }
 
@@ -74,10 +77,7 @@ public class Quorum {
      * @throws IOException
      */
     public DSElement initReadQuorum(Message message, Replicas replicas) throws IOException, QuorumNumberException {
-        if (readQuorum > replicas.size()) {
-            throw(new QuorumNumberException(readQuorum, replicas.size()));
-        }
-        else if (message.getType() != MessageType.Read) {
+        if (message.getType() != MessageType.Read) {
             throw(new RuntimeException());
         }
 

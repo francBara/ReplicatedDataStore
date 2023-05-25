@@ -1,6 +1,6 @@
 package it.polimi.ds.View.GUI;
 
-import it.polimi.ds.Client;
+import it.polimi.ds.Client.Client;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import it.polimi.ds.View.CLI.InputValidation;
 

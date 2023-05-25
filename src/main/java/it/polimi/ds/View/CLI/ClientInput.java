@@ -1,6 +1,6 @@
 package it.polimi.ds.View.CLI;
 
-import it.polimi.ds.Client;
+import it.polimi.ds.Client.Client;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 
 import java.io.BufferedReader;
@@ -94,6 +94,7 @@ public class ClientInput {
                     client.write(key, value);
                     System.out.println("Write executed");
                 } catch (IOException e) {
+                    System.out.println(e);
                     System.out.println("Operation failed");
                 }
             }
@@ -104,6 +105,7 @@ public class ClientInput {
                     System.out.println(dsElement);
                     System.out.println("Read executed");
                 } catch (IOException e) {
+                    System.out.println(e);
                     System.out.println("Operation failed");
                 }
             }

@@ -33,8 +33,9 @@ public class DataStoreMain {
         else if (choice.equals("B")) {
             System.out.println("Insert IP:");
             String ip = scanner.nextLine();
+
             try {
-                dsCommunication.joinDataStore(ip, 5000);
+                dsCommunication.joinDataStore(ip, chooseInt(scanner, "port"));
             } catch(IOException e) {
                 System.out.println(e);
             }
@@ -42,7 +43,7 @@ public class DataStoreMain {
     }
 
     private static int chooseInt(Scanner scanner, String text){
-        System.out.println("Please choose the "+text+"number:");
+        System.out.println("Please choose the "+text+" number:");
         while(!scanner.hasNextInt()){
             System.out.println("Invalid input: please enter a valid "+text+" number!");
             scanner.next();
