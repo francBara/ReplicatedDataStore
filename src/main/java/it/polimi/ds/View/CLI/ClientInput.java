@@ -77,6 +77,7 @@ public class ClientInput {
         }
 
         client.bind(dataStoreIp, Integer.parseInt(dataStorePort));
+        clearConsole();
         System.out.println("Connected at "+ dataStoreIp +": "+ Integer.parseInt(dataStorePort)+ "\n");
 
         System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
@@ -109,16 +110,22 @@ public class ClientInput {
                     System.out.println("Operation failed");
                 }
             }
-            case "HELP" -> System.out.println("""
+            case "HELP" -> {
+                clearConsole();
+                System.out.println("""
                 Here is the list of possible actions:
                 'read': allows to read the value of the key you provide
                 'write': allows to write the value of the key you provide
-                'exit': allows to disconnect from the DataStore""");
+                'exit': allows to disconnect from the DataStore
+                'clear: clears the console""");
+            }
 
+            case "CLEAR" -> clearConsole();
             case "EXIT" -> {
                 String key = nextLine("Are you sure you want to disconnect? (y/n)\n> ");
                 if (key.equals("y")) {
-                    System.out.println("disconnecting...\n");
+                    clearConsole();
+                    System.out.println("--Disconnected--\n");
                     connected = false;
                     // TODO: handle the un-binding of the client
                     client.bind("",0);
@@ -128,10 +135,16 @@ public class ClientInput {
                     System.out.println("Cannot handle this operation!\n");
                 }
             }
+            case "" -> System.out.print("");
             default -> {
                 System.out.println("Cannot handle this operation!\n");
                 System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
             }
         }
+    }
+
+    private void clearConsole(){
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
     }
 }

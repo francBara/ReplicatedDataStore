@@ -53,9 +53,9 @@ public class RoleScreen extends LayoutManager {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                dispose();
                 SwingUtilities.invokeLater(()->{
-                    next = new ClientScreen("it/polimi/ds/DataStore", "Perform a read or a write", "Select the desired option");
+                    dispose();
+                    next = new ClientScreen("Client", "Perform a read or a write", "Select the desired option");
                     transition(getLocation(), getSize());
                 });
             }
@@ -77,9 +77,9 @@ public class RoleScreen extends LayoutManager {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                dispose();
                 SwingUtilities.invokeLater(()->{
-                    next = new ReplicaScreen("it/polimi/ds/DataStore", "Initiate or join a DataStore", "");
+                    dispose();
+                    next = new ReplicaScreen("DataStore Replica", "Initiate or join a DataStore", "");
                     transition(getLocation(), getSize());
                 });
             }

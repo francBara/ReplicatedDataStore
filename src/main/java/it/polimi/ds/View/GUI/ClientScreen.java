@@ -13,16 +13,17 @@ public class ClientScreen extends LayoutManager {
 
     private JButton readButton = new JButton();
     private JButton writeButton = new JButton();
+    private JButton disconnect = new JButton();
     private JLabel keyLabel = new JLabel();
     private JLabel valueLabel = new JLabel();
     private JTextField keyField = new JTextField();
     private JTextField valueField = new JTextField();
     private JButton confirmOperation = new JButton();
-
     private boolean readClicked = false;
     private boolean writeClicked = false;
-
     private Client client;
+    private boolean connected = false;
+
 
     public ClientScreen(String title, String topText, String bottomText) {
         super(title, topText, bottomText);
@@ -62,7 +63,6 @@ public class ClientScreen extends LayoutManager {
                 String ip = ipAddress.getText();
                 String port = portNumber.getText();
 
-
                 if (!(check.validateIp(ip) && check.validateInt(port))) {
                     bottomBanner.setText("INVALID");
                 }
@@ -71,80 +71,107 @@ public class ClientScreen extends LayoutManager {
                     client = new Client();
                     client.bind(ip, Integer.parseInt(port));
                     centralPanel.removeAll();
+                    previousPage.setText("Exit");
                     bottomBanner.setText("CLIENT CONNECTED WITH "+ ip +" "+port);
+                    connected = true;
                     readWrite();
                 }
+            }
+        });
+
+        previousPage.setText("Back");
+        previousPage.setFont(font);
+        previousPage.setSize(new Dimension(80, 30));
+        topPanel.add(previousPage, FlowLayout.LEFT);
+        previousPage.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(!connected) {
+                    SwingUtilities.invokeLater(() -> {
+                        dispose();
+                        next = new RoleScreen("Menu", "CHOOSE BETWEEN A CLIENT OR REPLICA", "Select the desired option");
+                        transition(getLocation(), getSize());
+                    });
+                }else {
+                    if (previousPage.getText().equals("NO")){
+                        infoBanner.setText("Are you sure you want to disconnect?");
+                        topPanel.add(disconnect, FlowLayout.RIGHT);
+                        previousPage.setText("NO");
+                    }else if(previousPage.getText().equals("NO")) {
+                        previousPage.setText("Back");
+                        topPanel.remove(disconnect);
+                    }
+                    topPanel.revalidate();
+                    topPanel.repaint();
+                }
+            }
+        });
+
+        disconnect.setText("YES");
+        disconnect.setFont(font);
+        disconnect.setSize(new Dimension(80, 30));
+        disconnect.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    dispose();
+                    next = new RoleScreen("Menu", "CHOOSE BETWEEN A CLIENT OR REPLICA", "Select the desired option");
+                    transition(getLocation(), getSize());
+                });
             }
         });
     }
 
     private void readWrite(){
-        centralPanel.setLayout(new GridLayout(1,2));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(10, 0, 10, 0);
 
-        JPanel left = new JPanel();
-        left.setLayout(new GridBagLayout());
-        left.setOpaque(false);
-        GridBagConstraints leftGbc = new GridBagConstraints();
-        leftGbc.gridx = 0;
-        leftGbc.gridy = 0;
-        leftGbc.insets = new Insets(20,0,20,0);
-        leftGbc.anchor = GridBagConstraints.CENTER;
-        leftGbc.weighty = 1.0;
-        leftGbc.weightx = 1.0;
+        centralPanel.setLayout(new GridBagLayout());
         readButton = new JButton("READ");
         buttonList.add(readButton);
         readButton.setFont(font);
-        left.add(readButton, leftGbc);
+        centralPanel.add(readButton, gbc);
 
-        leftGbc.gridy = 1;
+        gbc.gridy++;
         writeButton = new JButton("WRITE");
         buttonList.add(writeButton);
         writeButton.setFont(font);
-        left.add(writeButton, leftGbc);
+        centralPanel.add(writeButton, gbc);
 
-        JPanel right = new JPanel();
-        right.setLayout(new GridBagLayout());
-        right.setOpaque(false);
-        GridBagConstraints rightGbc = new GridBagConstraints();
-        rightGbc.gridx = 0;
-        rightGbc.gridy = 0;
-        rightGbc.insets = new Insets(0,0,0,0);
-        rightGbc.anchor = GridBagConstraints.CENTER;
-        rightGbc.weighty = 1.0;
-        rightGbc.weightx = 1.0;
-
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridy++;
         keyLabel = new JLabel("Enter the key");
         keyLabel.setFont(font);
-        right.add(keyLabel, rightGbc);
+        centralPanel.add(keyLabel, gbc);
 
-        rightGbc.gridy = 1;
+        gbc.gridy++;
         keyField = new JTextField();
         keyField.setFont(changeFont(fontPath,18));
         keyField.setPreferredSize(new Dimension(150, 30));
         keyField.setEnabled(false);
-        right.add(keyField, rightGbc);
+        centralPanel.add(keyField, gbc);
 
-        rightGbc.gridy = 3;
+        gbc.gridy++;
         valueLabel = new JLabel("Enter the value");
         valueLabel.setFont(font);
-        right.add(valueLabel, rightGbc);
+        centralPanel.add(valueLabel, gbc);
 
-        rightGbc.gridy = 4;
+        gbc.gridy++;
         valueField = new JTextField();
         valueField.setPreferredSize(new Dimension(150, 30));
         valueField.setFont(changeFont(fontPath,18));
         valueField.setEnabled(false);
-        right.add(valueField, rightGbc);
+        centralPanel.add(valueField, gbc);
 
-        rightGbc.gridy = 5;
-        confirmOperation = new JButton("CONFIRM");
+        gbc.gridy++;
+        confirmOperation.setText("CONFIRM");
         buttonList.add(confirmOperation);
-        confirmOperation.setEnabled(false);
         confirmOperation.setFont(font);
-        right.add(confirmOperation, rightGbc);
-
-        centralPanel.add(left);
-        centralPanel.add(right);
+        confirmOperation.setEnabled(false);
+        centralPanel.add(confirmOperation, gbc);
 
         readButton.addMouseListener(new MouseAdapter() {
             @Override
@@ -153,7 +180,6 @@ public class ClientScreen extends LayoutManager {
                     readClicked = true;
                     writeButton.setEnabled(false);
                     keyField.setEnabled(true);
-                    valueField.setEnabled(false);
                     valueField.setVisible(false);
                     valueLabel.setVisible(false);
                     confirmOperation.setEnabled(true);
@@ -182,6 +208,7 @@ public class ClientScreen extends LayoutManager {
                     readButton.setEnabled(false);
                     keyField.setEnabled(true);
                     valueField.setEnabled(true);
+                    valueLabel.setEnabled(true);
                     confirmOperation.setEnabled(true);
                     bottomBanner.setText("Now choose the key to write and its value");
                 }
@@ -215,7 +242,11 @@ public class ClientScreen extends LayoutManager {
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             }
-                            bottomBanner.setText("read executed, value--" + dsElement.getValue()+"--version number--"+dsElement.getVersionNumber());
+                            if(dsElement.isNull()) {
+                                bottomBanner.setText("This element is null!");
+                            }else {
+                                bottomBanner.setText("Read executed, value: " + dsElement.getValue() + ", version number: " + dsElement.getVersionNumber());
+                            }
                             resetButtons();
                         }).start();
 
@@ -225,7 +256,7 @@ public class ClientScreen extends LayoutManager {
                     String value = valueField.getText();
 
                     System.out.println("Key to write "+ text);
-                    System.out.println("Value to writw "+ value);
+                    System.out.println("Value to write "+ value);
 
                     if(text != null && value != null){
                         new Thread( ()->{
@@ -253,13 +284,13 @@ public class ClientScreen extends LayoutManager {
         readClicked = false;
         readButton.setEnabled(true);
         writeButton.setEnabled(true);
-        confirmOperation.setEnabled(false);
-        keyField.setVisible(true);
         keyField.setEnabled(false);
-        valueField.setVisible(true);
-        valueField.setEnabled(false);
         keyLabel.setVisible(true);
+        valueField.setEnabled(false);
+        valueField.setVisible(true);
         valueLabel.setVisible(true);
+        confirmOperation.setEnabled(false);
+        confirmOperation.setVisible(true);
         keyField.setText("");
         valueField.setText("");
     }
