@@ -67,7 +67,7 @@ public class Client {
             new Thread(() -> {
                 try {
                     write(key, value + finalI);
-                } catch (IOException ignored) {}
+                } catch (Exception ignored) {}
             }).start();
         }
     }
