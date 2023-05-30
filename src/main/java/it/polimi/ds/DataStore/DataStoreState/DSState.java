@@ -1,6 +1,7 @@
 package it.polimi.ds.DataStore.DataStoreState;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -59,7 +60,7 @@ public class DSState {
                         stateDirectory.mkdir();
                     }
                     FileWriter fileWriter = new FileWriter("." + File.separator + "state" + File.separator + "data" + this.hashCode() + ".json");
-                    Gson gson = new Gson();
+                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
                     fileWriter.write(gson.toJson(dataStore));
                     fileWriter.flush();
                     fileWriter.close();
