@@ -8,14 +8,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Locale;
 
-public class ClientInput {
+public class ClientMain {
 
     private Client client;
     private BufferedReader input;
     private boolean connected;
 
     public static void main(String[] args) {
-        ClientInput main = new ClientInput();
+        ClientMain main = new ClientMain();
         main.start();
     }
 

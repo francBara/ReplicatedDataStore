@@ -1,4 +1,4 @@
-package it.polimi.ds;
+package it.polimi.ds.View.CLI;
 
 import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
