@@ -48,6 +48,7 @@ public class SmallDSTest extends TestCase {
             assertTrue(client.write("Alen", "Kaja"));
             assertEquals("Kaja", client.read("Alen").getValue());
         } catch(Exception ignored) {
+            System.out.println(ignored);
             fail();
         }
     }

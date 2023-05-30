@@ -58,7 +58,7 @@ public class DSState {
                     if (!(stateDirectory).exists()) {
                         stateDirectory.mkdir();
                     }
-                    FileWriter fileWriter = new FileWriter("." + File.separator + "state" + File.separator + "data.json");
+                    FileWriter fileWriter = new FileWriter("." + File.separator + "state" + File.separator + "data" + this.hashCode() + ".json");
                     Gson gson = new Gson();
                     fileWriter.write(gson.toJson(dataStore));
                     fileWriter.flush();
