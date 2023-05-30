@@ -105,6 +105,15 @@ public class DistributedTest extends TestCase {
                 assertEquals("Software", client.read("Distributed").getValue());
             }
 
+            final int writes = 100;
+
+            for (int i = 0; i < writes; i++) {
+                assertTrue(client.write("Alen", "Kaja" + i));
+            }
+
+            assertEquals("Kaja99", client.read("Alen").getValue());
+            assertEquals(writes + 2, client.read("Alen").getVersionNumber());
+
         } catch(Exception e) {
             System.out.println(e);
             fail();

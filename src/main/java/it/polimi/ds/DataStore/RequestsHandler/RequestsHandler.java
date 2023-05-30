@@ -51,12 +51,22 @@ public abstract class RequestsHandler {
         }
     }
 
-    public void handleReadQuorum(PrintWriter writer, Message message) {
+    public void handleReadQuorum(PrintWriter writer, Scanner scanner, Message message) {
         try {
+            Gson gson = new Gson();
+
             //This replica replies to the read quorum with its version of the requested element
             DSElement dsElement = dsState.read(message.getKey());
-            writer.println(new Gson().toJson(dsElement));
+            writer.println(gson.toJson(dsElement));
+
+            //Read-repair in case of stale element
+            MessageType elementIsRecent = MessageType.valueOf(scanner.nextLine());
+            if (elementIsRecent == MessageType.KO) {
+                DSElement recentElement = gson.fromJson(scanner.nextLine(), DSElement.class);
+                dsState.write(message.getKey(), recentElement);
+            }
         } catch(DSStateException e) {
+            //TODO: Handle KO in the other side
             writer.println(new Message(MessageType.KO).toJson());
         }
     }

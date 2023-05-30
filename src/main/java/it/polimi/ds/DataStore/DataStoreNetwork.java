@@ -124,7 +124,7 @@ public class DataStoreNetwork {
                     requestsHandler.handleRead(writer, message);
                 }
                 else if (message.messageType == MessageType.ReadQuorum) {
-                    requestsHandler.handleReadQuorum(writer, message);
+                    requestsHandler.handleReadQuorum(writer, scanner, message);
                 }
                 else if (message.messageType == MessageType.Write) {
                     requestsHandler.handleWrite(writer, message);

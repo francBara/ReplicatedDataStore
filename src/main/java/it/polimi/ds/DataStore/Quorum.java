@@ -7,7 +7,9 @@ import it.polimi.ds.Message.Message;
 import it.polimi.ds.Message.MessageType;
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -57,7 +59,6 @@ public class Quorum {
         int successfulReplicas = 0;
 
         for (Socket socket : quorumReplicas) {
-            //TODO: Should implement timeouts
             scanner = new Scanner(socket.getInputStream());
             Message writeAck = gson.fromJson(scanner.nextLine(), Message.class);
             if (writeAck.messageType == MessageType.OK) {
@@ -66,7 +67,8 @@ public class Quorum {
             socket.close();
         }
 
-        return successfulReplicas > replicas.size() / 2;
+        //TODO: Change to writeQuorum / 2
+        return successfulReplicas > writeQuorum / 2;
     }
 
     /**
@@ -83,27 +85,39 @@ public class Quorum {
 
         message.setQuorum();
 
-        final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, readQuorum);
+        //Pairs every replica with its queried element
+        final HashMap<Socket, DSElement> quorumValues = new HashMap<>();
+        replicas.sendMessageToBatch(message, readQuorum).forEach((Socket socket) -> quorumValues.put(socket, new DSNullElement()));
 
         Scanner scanner;
         final Gson gson = new Gson();
         DSElement currentReadElement = new DSNullElement();
 
-        for (Socket socket : quorumReplicas) {
-            //TODO: Should implement timeouts
+        for (Socket socket : quorumValues.keySet()) {
             scanner = new Scanner(socket.getInputStream());
 
             DSElement readElement = gson.fromJson(scanner.nextLine(), DSElement.class);
-            //System.out.println(readElement);
+            quorumValues.put(socket, readElement);
 
+            //The most recent element is chosen
             if (!readElement.isNull() && (currentReadElement.isNull() || readElement.getVersionNumber() > currentReadElement.getVersionNumber())) {
                 currentReadElement = readElement;
             }
-
-            socket.close();
         }
 
-        System.out.println("\n");
+        PrintWriter writer;
+        for (Socket socket : quorumValues.keySet()) {
+            writer = new PrintWriter(socket.getOutputStream(), true);
+            //Read-repair, in case of stale values in replicas, an update is propagated
+            if (!currentReadElement.isNull() && (quorumValues.get(socket).isNull() || quorumValues.get(socket).getVersionNumber() < currentReadElement.getVersionNumber())) {
+                writer.println(MessageType.KO);
+                writer.println(gson.toJson(currentReadElement));
+            }
+            else {
+                writer.println(MessageType.OK);
+            }
+            socket.close();
+        }
 
         return currentReadElement;
     }

@@ -127,8 +127,6 @@ public class ClientMain {
                     clearConsole();
                     System.out.println("--Disconnected--\n");
                     connected = false;
-                    // TODO: handle the un-binding of the client
-                    client.bind("",0);
                 } else if (key.equals("n")) {
                     System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
                 } else {
