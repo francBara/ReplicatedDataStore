@@ -7,7 +7,7 @@ public class LoadingScreen extends LayoutManager {
     public LoadingScreen(String title, String topText, String bottomText) {
         super(title, topText, bottomText);
 
-        ImageIcon originalIcon = new ImageIcon("src/main/resources/Images/ds.png");
+        ImageIcon originalIcon = new ImageIcon(imagePath);
         Image originalImage = originalIcon.getImage();
 
         JLabel imageLabel = new JLabel() {
@@ -48,10 +48,10 @@ public class LoadingScreen extends LayoutManager {
 
             if (executionCount[0] >= totalExecutions) {
                 ((Timer) e.getSource()).stop();
-                dispose();
 
                 SwingUtilities.invokeLater(()->{
-                    next = new RoleScreen("Choose", "CHOOSE BETWEEN A CLIENT OR REPLICA", "Select the desired option");
+                    dispose();
+                    next = new RoleScreen("Menu", "CHOOSE BETWEEN A CLIENT OR REPLICA", "Select the desired option");
                     transition(getLocation(),getSize());
                 });
             }

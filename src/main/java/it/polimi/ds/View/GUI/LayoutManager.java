@@ -11,6 +11,7 @@ import java.util.ArrayList;
 public class LayoutManager extends JFrame {
 
     protected JFrame next;
+    protected JButton previousPage = new JButton();
     protected JLabel infoBanner;
     protected JLabel bottomBanner;
     protected JPanel topPanel;
@@ -23,16 +24,20 @@ public class LayoutManager extends JFrame {
     protected String oldBottomText;
 
     protected String fontPath = "src/main/resources/Montserrat/static/Montserrat-ExtraBold.ttf";
+    protected String imagePath = "src/main/resources/Images/ds.png";
+    protected ImageIcon icon;
     protected ArrayList<JButton> buttonList;
 
     public LayoutManager(String title, String topText, String bottomText){
         this.title = title;
         this.topText = topText;
         this.bottomText = bottomText;
+        this.icon = new ImageIcon(imagePath);
         this.buttonList = new ArrayList<>();
 
         setTitle(this.title);
-        setSize(980, 720);
+        setSize(600, 400);
+        setIconImage(icon.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
 

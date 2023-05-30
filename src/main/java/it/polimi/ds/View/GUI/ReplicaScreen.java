@@ -8,8 +8,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.ArrayList;
-
 
 public class ReplicaScreen extends LayoutManager {
     private final JButton initiateButton;
@@ -17,7 +15,8 @@ public class ReplicaScreen extends LayoutManager {
     private final JButton confirmButton;
     private final JTextField writeQuorum; private final JLabel wQuorumLabel;
     private final JTextField readQuorum;private final JLabel rQuorumLabel;
-    private final JTextField ipAddress;private final JLabel ipLabel;
+    private final JTextField ipAddress; private final JLabel ipLabel;
+    private final JTextField myPort; private final JLabel myPortLabel;
     private final JTextField portNumber;private final JLabel portLabel;
     private boolean joinClicked = false;
     private boolean initiateClicked = false;
@@ -25,7 +24,6 @@ public class ReplicaScreen extends LayoutManager {
 
     public ReplicaScreen(String title, String topText, String bottomText) {
         super(title, topText, bottomText);
-        ArrayList<JTextField> textFields = new ArrayList<>();
 
         centralPanel.setLayout(new GridLayout(2,1));
 
@@ -56,20 +54,26 @@ public class ReplicaScreen extends LayoutManager {
 
         writeQuorum = new JTextField(); writeQuorum.setFont(font); writeQuorum.setPreferredSize(new Dimension(150, 30)); writeQuorum.setVisible(false);
         readQuorum = new JTextField(); readQuorum.setFont(font); readQuorum.setPreferredSize(new Dimension(150, 30)); readQuorum.setVisible(false);
+        myPort = new JTextField(); myPort.setFont(font); myPort.setPreferredSize(new Dimension(150, 30)); myPort.setVisible(false);
         ipAddress = new JTextField(); ipAddress.setFont(font); ipAddress.setPreferredSize(new Dimension(150, 30)); ipAddress.setVisible(false);
         portNumber = new JTextField(); portNumber.setFont(font); portNumber.setPreferredSize(new Dimension(150, 30)); portNumber.setVisible(false);
 
-        textFields.add(writeQuorum); textFields.add(readQuorum); textFields.add(ipAddress); textFields.add(portNumber);
-
         wQuorumLabel = new JLabel("Write quorum number"); wQuorumLabel.setFont(font); wQuorumLabel.setVisible(false);
         rQuorumLabel = new JLabel("Read quorum number"); rQuorumLabel.setFont(font); rQuorumLabel.setVisible(false);
+        myPortLabel = new JLabel("My port number"); myPortLabel.setFont(font); myPortLabel.setVisible(false);
         ipLabel = new JLabel("Ip address"); ipLabel.setFont(font); ipLabel.setVisible(false);
-        portLabel = new JLabel("Port Number"); portLabel.setFont(font); portLabel.setVisible(false);
+        portLabel = new JLabel("DataStore Port Number"); portLabel.setFont(font); portLabel.setVisible(false);
 
         GridBagConstraints lowerGbc = new GridBagConstraints();
         lowerGbc.gridx = 0;
         lowerGbc.gridy = 0;
         lowerGbc.insets = new Insets(10, 0, 5,20);
+
+        lowerGbc.gridy++;
+        lowerPanel.add(myPortLabel, lowerGbc);
+        lowerGbc.gridx++;
+        lowerPanel.add(myPort, lowerGbc);
+        lowerGbc.gridx--;
 
         lowerGbc.gridy++;
         lowerPanel.add(ipLabel, lowerGbc);
@@ -115,12 +119,11 @@ public class ReplicaScreen extends LayoutManager {
                 if(!initiateClicked && !joinClicked){
                     initiateClicked = true;
                     joinButton.setEnabled(false);
+                    myPortLabel.setVisible(true);
+                    myPort.setVisible(true);
                     ipLabel.setVisible(true);
                     ipAddress.setVisible(true);
                     ipAddress.setText("127.0.0.1");
-                    ipAddress.setEnabled(false);
-                    portLabel.setVisible(true);
-                    portNumber.setVisible(true);
                     confirmButton.setVisible(true);
                     confirmButton.setEnabled(true);
                     wQuorumLabel.setVisible(true);
@@ -149,6 +152,8 @@ public class ReplicaScreen extends LayoutManager {
                 if(!initiateClicked && !joinClicked){
                     joinClicked = true;
                     initiateButton.setEnabled(false);
+                    myPortLabel.setVisible(true);
+                    myPort.setVisible(true);
                     ipLabel.setVisible(true);
                     ipAddress.setVisible(true);
                     portLabel.setVisible(true);
@@ -176,22 +181,23 @@ public class ReplicaScreen extends LayoutManager {
         confirmButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                String myNumber = myPort.getText();
                 String ip = ipAddress.getText();
-                String port = portNumber.getText();
+                String dataStoreNumber = portNumber.getText();
                 String wQuorum = writeQuorum.getText();
                 String rQuorum = readQuorum.getText();
 
                 if (initiateClicked) {
-                    if (!(check.validateIp(ip) && check.validateInt(port) && check.validateInt(wQuorum) && check.validateInt(rQuorum))) {
+                    if (!(check.validateIp(ip) && check.validateInt(myNumber) && check.validateInt(wQuorum) && check.validateInt(rQuorum))) {
                         bottomBanner.setText("INVALID");
                     }
                     else {
-                        dispose();
                         Point point = getLocation();
                         Dimension size = getSize();
                         SwingUtilities.invokeLater(()->{
+                            dispose();
                             try {
-                                next = new IdleReplica("DsCommunication", "FIRST REPLICA", "", ip, Integer.parseInt(port), Integer.parseInt(wQuorum), Integer.parseInt(rQuorum), point, size);
+                                next = new IdleReplica("DsCommunication", "FIRST REPLICA", "", Integer.parseInt(myNumber),  ip, -1, Integer.parseInt(wQuorum), Integer.parseInt(rQuorum), point, size);
                             } catch (QuorumNumberException | IOException ex) {
                                 throw new RuntimeException(ex);
                             }
@@ -199,16 +205,16 @@ public class ReplicaScreen extends LayoutManager {
                     }
                 }
                 else if (joinClicked) {
-                    if (!(check.validateIp(ip) && check.validateInt(port))){
+                    if (!(check.validateInt(myNumber) &&  check.validateIp(ip) && check.validateInt(dataStoreNumber))){
                         bottomBanner.setText("INVALID");
                     }else{
-                        dispose();
                         Point point = getLocation();
                         Dimension size = getSize();
 
                         SwingUtilities.invokeLater(()->{
+                            dispose();
                             try {
-                                next = new IdleReplica("DsCommunication", "JOINED REPLICA", "",ip, Integer.parseInt(port), -1, -1, point, size);
+                                next = new IdleReplica("DsCommunication", "JOINED REPLICA", "", Integer.parseInt(myNumber), ip, Integer.parseInt(dataStoreNumber), -1, -1, point, size);
                             } catch (QuorumNumberException | IOException ex) {
                                 throw new RuntimeException(ex);
                             }
@@ -216,6 +222,21 @@ public class ReplicaScreen extends LayoutManager {
 
                     }
                 }
+            }
+        });
+
+        previousPage.setText("Back");
+        previousPage.setFont(font);
+        previousPage.setSize(new Dimension(80, 30));
+        topPanel.add(previousPage, FlowLayout.LEFT);
+        previousPage.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SwingUtilities.invokeLater(()->{
+                    dispose();
+                    next = new RoleScreen("Menu", "CHOOSE BETWEEN A CLIENT OR REPLICA", "Select the desired option");
+                    transition(getLocation(),getSize());
+                });
             }
         });
     }

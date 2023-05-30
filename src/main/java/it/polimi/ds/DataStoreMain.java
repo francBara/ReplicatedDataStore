@@ -13,7 +13,7 @@ public class DataStoreMain {
 
         final Scanner scanner = new Scanner(System.in);
 
-        int port = chooseInt(scanner,"port");
+        int port = chooseInt(scanner,"your port");
         scanner.nextLine();
 
         final DataStoreNetwork dsCommunication = new DataStoreNetwork();
@@ -35,7 +35,7 @@ public class DataStoreMain {
             String ip = scanner.nextLine();
 
             try {
-                dsCommunication.joinDataStore(ip, chooseInt(scanner, "port"));
+                dsCommunication.joinDataStore(ip, chooseInt(scanner, "datastore port"));
             } catch(IOException e) {
                 System.out.println(e);
             }
@@ -43,7 +43,7 @@ public class DataStoreMain {
     }
 
     private static int chooseInt(Scanner scanner, String text){
-        System.out.println("Please choose the "+text+" number:");
+        System.out.println("Please choose "+text+" number:");
         while(!scanner.hasNextInt()){
             System.out.println("Invalid input: please enter a valid "+text+" number!");
             scanner.next();
