@@ -3,10 +3,12 @@ package it.polimi.ds.View.CLI;
 import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
+import it.polimi.ds.DataStore.LocalReplicasFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashSet;
 
 public class DataStoreMain {
 
@@ -57,6 +59,8 @@ public class DataStoreMain {
         else{
             String ip;
             String dataStorePort;
+            String localReplicas;
+
             do {
                 ip = clientInput.nextLine(input, "Please insert the ip address of the datastore\n> ");
             }while(!inputValidation.validateIp(ip));
@@ -65,9 +69,14 @@ public class DataStoreMain {
                 dataStorePort = clientInput.nextLine(input, "Please insert the datastore port number\n> ");
             }while(!inputValidation.validateInt(dataStorePort));
 
+            do {
+                localReplicas = clientInput.nextLine(input, "How many replicas do you want to locally create?\n> ");
+            }while(!inputValidation.validateInt(dataStorePort));
+
             try {
-                dsCommunication.joinDataStore(ip, Integer.parseInt(dataStorePort));
-            } catch(IOException  | FullDataStoreException e) {
+                HashSet<DataStoreNetwork> replicas = new LocalReplicasFactory().getReplicas(ip, Integer.parseInt(dataStorePort), port, Integer.parseInt(localReplicas));
+                //dsCommunication.joinDataStore(ip, Integer.parseInt(dataStorePort));
+            } catch(RuntimeException e) {
                 System.out.println(e);
            }
         }

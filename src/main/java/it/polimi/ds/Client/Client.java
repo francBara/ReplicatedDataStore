@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Client {
@@ -64,11 +65,13 @@ public class Client {
     public void writeMany(int count, String key, String value) {
         for (int i = 0; i < count; i++) {
             int finalI = i;
-            new Thread(() -> {
-                try {
-                    write(key, value + finalI);
-                } catch (Exception ignored) {}
-            }).start();
+            try {
+                new Thread(() -> {
+                    try {
+                        write(key, value + finalI);
+                    } catch (Exception ignored) {}
+                }).start();
+            } catch(Exception ignored) {}
         }
     }
 }

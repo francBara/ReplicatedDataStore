@@ -46,6 +46,9 @@ public class CoordinatorHandler extends RequestsHandler {
             //The new replica is sent to other replicas
             replicas.updateReplicas(replica);
             replicas.addReplica(replica);
+
+            System.out.println("New replica joined");
+            System.out.println("Current number of replicas: " + replicas.size() + 1 + "\n");
         }
     }
 }
