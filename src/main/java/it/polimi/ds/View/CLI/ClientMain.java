@@ -13,6 +13,8 @@ public class ClientMain {
     private Client client;
     private BufferedReader input;
     private boolean connected;
+    private ClientInput clientInput;
+
 
     public static void main(String[] args) {
         ClientMain main = new ClientMain();
@@ -22,33 +24,23 @@ public class ClientMain {
     private void start(){
         client = new Client();
         input =  new BufferedReader(new InputStreamReader(System.in));
+        clientInput = new ClientInput();
         connected = false;
         System.out.println("\nWelcome to the DataStore! Here you can store and retrieve data.\n");
 
         new Thread(() -> {
-                    do {
-                        if (connected){
-                            String s = nextLine("> ");
-                            readInput(s);
-                        }
-                        else {
-                            connect();
-                        }
-                    } while (true);
+            do {
+                if (connected){
+                    String s = clientInput.nextLine(this.input,"> ");
+                    readInput(s);
+                }
+                else {
+                    connect();
+                }
+            } while (true);
         }).start();
     }
 
-    private String nextLine(String str)
-    {
-        String s = "";
-        System.out.print(str);
-        try {
-            s = input.readLine();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return s;
-    }
 
     private void connect(){
         System.out.println("Connection phase");
@@ -60,7 +52,7 @@ public class ClientMain {
         String dataStorePort = "";
 
         while(!(isValidIp && isValidPort)) {
-            dataStoreIp = nextLine("Please provide the IP address of the datastore\n> ");
+            dataStoreIp = clientInput.nextLine(this.input,"Please provide the IP address of the datastore\n> ");
 
             isValidIp = validation.validateIp(dataStoreIp);
             if(!isValidIp){
@@ -68,7 +60,7 @@ public class ClientMain {
                 continue;
             }
 
-            dataStorePort = nextLine("Please provide the port number of the datastore\n> ");
+            dataStorePort =  clientInput.nextLine(input,"Please provide the port number of the datastore\n> ");
             isValidPort = validation.validateInt(dataStorePort);
 
             if(!isValidPort){
@@ -77,7 +69,7 @@ public class ClientMain {
         }
 
         client.bind(dataStoreIp, Integer.parseInt(dataStorePort));
-        clearConsole();
+        clientInput.clearConsole();
         System.out.println("Connected at "+ dataStoreIp +": "+ Integer.parseInt(dataStorePort)+ "\n");
 
         System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
@@ -89,29 +81,33 @@ public class ClientMain {
 
         switch (input) {
             case "WRITE" -> {
-                String key = nextLine("Insert the key: ");
-                String value = nextLine("Insert the value: ");
+                String key =  clientInput.nextLine(this.input,"Insert the key: ");
+                String value =  clientInput.nextLine(this.input,"Insert the value: ");
                 try {
-                    client.write(key, value);
-                    System.out.println("Write executed");
+                    if(client.write(key, value)) {
+                        System.out.println(Colors.GREEN + "Write executed"+ Colors.RESET);
+                    }else{
+                        System.out.println(Colors.RED + "Could not perform the operation!" + Colors.RESET);
+                    }
                 } catch (IOException e) {
                     System.out.println(e);
-                    System.out.println("Operation failed");
                 }
             }
             case "READ" -> {
-                String key = nextLine("Key to read from:");
+                String key = clientInput.nextLine(this.input,"Key to read from:");
                 try {
                     DSElement dsElement = client.read(key);
-                    System.out.println(dsElement);
-                    System.out.println("Read executed");
+                    if(dsElement.isNull()){
+                    System.out.println(Colors.RED + "This element has never been written!"+ Colors.RESET);
+                    }else{
+                        System.out.println(Colors.GREEN +"READ KEY: "+ key + "\nREAD VALUE: "+dsElement.getValue()+"\nVERSION NUMBER: "+dsElement.getVersionNumber()+ Colors.RESET);
+                    }
                 } catch (IOException e) {
                     System.out.println(e);
-                    System.out.println("Operation failed");
                 }
             }
             case "HELP" -> {
-                clearConsole();
+                clientInput.clearConsole();
                 System.out.println("""
                 Here is the list of possible actions:
                 'read': allows to read the value of the key you provide
@@ -120,29 +116,24 @@ public class ClientMain {
                 'clear: clears the console""");
             }
 
-            case "CLEAR" -> clearConsole();
+            case "CLEAR" -> clientInput.clearConsole();
             case "EXIT" -> {
-                String key = nextLine("Are you sure you want to disconnect? (y/n)\n> ");
+                String key = clientInput.nextLine(this.input,"Are you sure you want to disconnect? (y/n)\n> ");
                 if (key.equals("y")) {
-                    clearConsole();
+                    clientInput.clearConsole();
                     System.out.println("--Disconnected--\n");
                     connected = false;
                 } else if (key.equals("n")) {
                     System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
                 } else {
-                    System.out.println("Cannot handle this operation!\n");
+                    System.out.println(Colors.RED+ "Cannot handle this operation!\n"+Colors.RESET);
                 }
             }
             case "" -> System.out.print("");
             default -> {
-                System.out.println("Cannot handle this operation!\n");
+                System.out.println(Colors.RED+ "Cannot handle this operation!\n"+Colors.RESET);
                 System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.\n");
             }
         }
-    }
-
-    private void clearConsole(){
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
     }
 }

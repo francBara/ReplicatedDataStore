@@ -1,63 +1,75 @@
 package it.polimi.ds.View.CLI;
 
 import it.polimi.ds.DataStore.DataStoreNetwork;
+import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Scanner;
+import java.io.InputStreamReader;
 
 public class DataStoreMain {
 
+    private BufferedReader input;
+    private InputValidation inputValidation;
+    private ClientInput clientInput;
+
     public static void main(String[] args) {
-        //TODO: Improve overall UX
+        DataStoreMain dataStoreMain = new DataStoreMain();
+        dataStoreMain.start();
+    }
 
-        final Scanner scanner = new Scanner(System.in);
+    public void start(){
+        input = new BufferedReader(new InputStreamReader(System.in));
+        inputValidation = new InputValidation();
+        clientInput = new ClientInput();
 
-        int port = chooseInt(scanner,"your port");
-        scanner.nextLine();
+        System.out.println("\nDatastore Main! Here you can Initialize or join a datastore.\n");
+
+        String s;
+        do{
+            s = clientInput.nextLine(input,"Please choose your port number\n> ");
+        }while(!inputValidation.validateInt(s));
+
+        int port = Integer.parseInt(s);
 
         final DataStoreNetwork dsCommunication = new DataStoreNetwork();
         dsCommunication.setPort(port);
 
-        String choice = chooseRole(scanner);
+        do{
+            s = clientInput.nextLine(input,"Please type 'initiate' or 'join'\n> ");
+        }while(!s.equals("initiate") &&!s.equals("join"));
 
-        if (choice.equals("A")) {
-            int wQuorum = chooseInt(scanner,"writeQuorum");
-            int rQuorum = chooseInt(scanner,"readQuorum");
+
+        if (s.equals("initiate")) {
+            String wQuorum, rQuorum;
+            do{
+                wQuorum = clientInput.nextLine(input, "Choose the write Quorum number\n> ");
+                rQuorum = clientInput.nextLine(input, "Choose the read Quorum number\n> ");
+            }while(!(inputValidation.validateInt(wQuorum) && inputValidation.validateInt(rQuorum)));
+
             try {
-                dsCommunication.initiateDataStore(wQuorum, rQuorum);
+                dsCommunication.initiateDataStore(Integer.parseInt(wQuorum), Integer.parseInt(rQuorum));
             } catch(IOException | QuorumNumberException e) {
                 System.out.println("ERROR");
             }
         }
-        else if (choice.equals("B")) {
-            System.out.println("Insert IP:");
-            String ip = scanner.nextLine();
+        else{
+            String ip;
+            String dataStorePort;
+            do {
+                ip = clientInput.nextLine(input, "Please insert the ip address of the datastore\n> ");
+            }while(!inputValidation.validateIp(ip));
+
+            do {
+                dataStorePort = clientInput.nextLine(input, "Please insert the datastore port number\n> ");
+            }while(!inputValidation.validateInt(dataStorePort));
 
             try {
-                dsCommunication.joinDataStore(ip, chooseInt(scanner, "datastore port"));
-            } catch(IOException e) {
+                dsCommunication.joinDataStore(ip, Integer.parseInt(dataStorePort));
+            } catch(IOException  | FullDataStoreException e) {
                 System.out.println(e);
-            }
+           }
         }
-    }
-
-    private static int chooseInt(Scanner scanner, String text){
-        System.out.println("Please choose "+text+" number:");
-        while(!scanner.hasNextInt()){
-            System.out.println("Invalid input: please enter a valid "+text+" number!");
-            scanner.next();
-        }
-        return scanner.nextInt();
-    }
-    private static String chooseRole(Scanner scanner) {
-        System.out.println("\n\nA - Initialize data store");
-        System.out.println("B - Join data store");
-        String param = scanner.nextLine();
-        while (!param.equals("A") && !param.equals("B")) {
-            System.out.println("Invalid input: please enter either 'A' or 'B'");
-            param = scanner.nextLine();
-        }
-        return param;
     }
 }

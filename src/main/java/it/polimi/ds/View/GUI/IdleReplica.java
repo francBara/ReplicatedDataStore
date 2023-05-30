@@ -1,6 +1,7 @@
 package it.polimi.ds.View.GUI;
 
 import it.polimi.ds.DataStore.DataStoreNetwork;
+import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
 import javax.swing.*;
 import java.awt.*;
@@ -46,7 +47,7 @@ public class IdleReplica extends LayoutManager{
                 try {
                     //TODO: Remove hardcoded value
                     dsCommunication.joinDataStore(ip, dataStorePort);
-                } catch (IOException e) {
+                } catch (IOException | FullDataStoreException e) {
                     throw new RuntimeException(e);
                 }
             }).start();

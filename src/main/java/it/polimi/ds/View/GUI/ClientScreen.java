@@ -93,7 +93,7 @@ public class ClientScreen extends LayoutManager {
                         transition(getLocation(), getSize());
                     });
                 }else {
-                    if (previousPage.getText().equals("NO")){
+                    if (previousPage.getText().equals("EXIT")){
                         infoBanner.setText("Are you sure you want to disconnect?");
                         topPanel.add(disconnect, FlowLayout.RIGHT);
                         previousPage.setText("NO");
