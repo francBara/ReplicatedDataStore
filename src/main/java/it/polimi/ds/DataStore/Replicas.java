@@ -42,7 +42,7 @@ public class Replicas {
      */
     public synchronized HashSet<Socket> sendMessageToBatch(Message message, int replicasNumber) throws IOException {
         final HashSet<Socket> replicasSockets = new HashSet<>();
-        //TODO: Improve the choice of replicas to contact, remember to take this replica into account
+
         int i = 0;
         for (Replica replica : replicas) {
             if (i == replicasNumber) {

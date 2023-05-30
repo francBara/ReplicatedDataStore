@@ -1,5 +1,6 @@
 import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
+import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
 import it.polimi.ds.Client.Client;
 import junit.framework.TestCase;
@@ -32,7 +33,7 @@ public class SmallDSTest extends TestCase {
             new Thread(() -> {
                 try {
                     ds.joinDataStore("127.0.0.1", 7000);
-                } catch(IOException e) {
+                } catch(IOException | FullDataStoreException e) {
                     fail();
                 }
             }).start();

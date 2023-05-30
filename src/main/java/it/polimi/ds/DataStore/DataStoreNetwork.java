@@ -49,7 +49,7 @@ public class DataStoreNetwork {
      * @param address The address of a replica of the data store
      * @param dataStorePort The port of a replica of the data store
      */
-    public void joinDataStore(String address, int dataStorePort) throws IOException {
+    public void joinDataStore(String address, int dataStorePort) throws IOException, FullDataStoreException {
         final Socket socket = new Socket(address, dataStorePort);
         final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
         final Scanner scanner = new Scanner(socket.getInputStream());
@@ -59,11 +59,9 @@ public class DataStoreNetwork {
 
         writer.println(message.toJson());
 
-        //TODO: Handle IllegalArgumentException
         final MessageType joinApproved = MessageType.valueOf(scanner.nextLine());
 
         if (joinApproved == MessageType.KO) {
-            //TODO: Handle FullDataStoreException
             /*
             This error is thrown when there are too many replicas in the data store,
             or when the contacted replica is not the coordinator.

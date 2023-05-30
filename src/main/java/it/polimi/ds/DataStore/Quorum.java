@@ -67,7 +67,6 @@ public class Quorum {
             socket.close();
         }
 
-        //TODO: Change to writeQuorum / 2
         return successfulReplicas > writeQuorum / 2;
     }
 

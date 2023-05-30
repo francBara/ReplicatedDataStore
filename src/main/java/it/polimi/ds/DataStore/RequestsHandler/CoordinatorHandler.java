@@ -26,7 +26,6 @@ public class CoordinatorHandler extends RequestsHandler {
     @Override
     public void handleJoin(Socket clientSocket, PrintWriter writer, Scanner scanner, Message message) {
         synchronized (this) {
-
             if (replicas.size() >= quorum.maxReplicas - 1) {
                 writer.println(MessageType.KO);
                 return;

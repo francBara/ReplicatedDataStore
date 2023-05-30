@@ -1,13 +1,16 @@
 package it.polimi.ds.DataStore.DataStoreState;
 
+import com.google.gson.Gson;
+
+import java.io.File;
+import java.io.FileWriter;
 import java.util.HashMap;
 
 /**
  * Manages the actual local datastore of a single replica
  */
 public class DSState {
-    //TODO: Read and write should probably use a file as permanent storage, and dataStore field for caching
-    private HashMap<String, DSElement> dataStore = new HashMap<>();
+    private final HashMap<String, DSElement> dataStore = new HashMap<>();
 
     /**
      *
@@ -16,7 +19,6 @@ public class DSState {
      * @throws DSStateException If some internal error occurs during reading
      */
     public synchronized DSElement read(String key) throws DSStateException {
-        //TODO: Should manage the case in which an element is not stored in the state, maybe with an exception
         final DSElement dsElement = dataStore.get(key);
         if (dsElement == null) {
             return new DSNullElement();
@@ -43,6 +45,26 @@ public class DSState {
 
     public synchronized void write(String key, DSElement element) throws DSStateException {
         dataStore.put(key, element);
+        writeInFile();
+    }
+
+    private void writeInFile() {
+        new Thread(() -> {
+            synchronized (dataStore) {
+                try {
+                    File stateDirectory = new File("." + File.separator + "state");
+
+                    if (!(stateDirectory).exists()) {
+                        stateDirectory.mkdir();
+                    }
+                    FileWriter fileWriter = new FileWriter("." + File.separator + "state" + File.separator + "data.json");
+                    Gson gson = new Gson();
+                    fileWriter.write(gson.toJson(dataStore));
+                    fileWriter.flush();
+                    fileWriter.close();
+                } catch(Exception ignored) {}
+            }
+        }).start();
     }
 }
 
