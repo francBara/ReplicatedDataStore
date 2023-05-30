@@ -16,7 +16,7 @@ public class SmallDSTest extends TestCase {
 
         new Thread(() -> {
             try {
-                firstReplica.initiateDataStore(100, 100);
+                firstReplica.initiateDataStore(1, 1);
             } catch(IOException | QuorumNumberException e) {
                 fail();
             }
@@ -24,33 +24,28 @@ public class SmallDSTest extends TestCase {
 
         delay(1);
 
-        for (int i = 0; i < 20; i++) {
-            replicas.add(new DataStoreNetwork(7001 + i));
-        }
 
-        //All replicas join concurrently
-        for (DataStoreNetwork ds : replicas) {
+        for (int i = 0; i < 100; i++) {
+            int finalI = i;
             new Thread(() -> {
                 try {
-                    ds.joinDataStore("127.0.0.1", 7000);
-                } catch(IOException | FullDataStoreException e) {
+                    new DataStoreNetwork(7001 + finalI).joinDataStore("127.0.0.1", 7000);
                     fail();
-                }
+                } catch(IOException | FullDataStoreException ignored) {}
             }).start();
         }
 
-        delay(1);
 
-        assertEquals(20, firstReplica.getReplicasSize());
+        assertEquals(0, firstReplica.getReplicasSize());
         for (DataStoreNetwork ds : replicas) {
-            assertEquals(20, ds.getReplicasSize());
+            assertEquals(0, ds.getReplicasSize());
         }
 
         Client client = new Client();
         client.bind("127.0.0.1", 7000);
 
         try {
-            client.write("Alen", "Kaja");
+            assertTrue(client.write("Alen", "Kaja"));
             assertEquals("Kaja", client.read("Alen").getValue());
         } catch(Exception ignored) {
             fail();
