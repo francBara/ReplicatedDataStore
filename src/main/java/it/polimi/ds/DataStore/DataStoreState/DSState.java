@@ -41,6 +41,7 @@ public class DSState {
         else {
             dataStore.put(key, new DSElement(value, versionNumber + 1));
         }
+        writeInFile();
     }
 
     public synchronized void write(String key, DSElement element) throws DSStateException {
