@@ -17,6 +17,9 @@ public class QuorumTest extends TestCase {
             quorum = new Quorum(1, 1);
             assertEquals(1, quorum.maxReplicas);
 
+            quorum = new Quorum(5, 200);
+            assertEquals(9, quorum.maxReplicas);
+
         } catch(QuorumNumberException e) {
             fail();
         }
