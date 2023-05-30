@@ -2,6 +2,8 @@ package it.polimi.ds.DataStore;
 
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import it.polimi.ds.DataStore.DataStoreState.DSNullElement;
+import it.polimi.ds.DataStore.DataStoreState.DSState;
+import it.polimi.ds.DataStore.DataStoreState.DSStateException;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
 import it.polimi.ds.Message.Message;
 import it.polimi.ds.Message.MessageType;
@@ -19,11 +21,13 @@ public class Quorum {
     public final int readQuorum;
     public final int maxReplicas;
 
+    final DSState dsState;
+
     //Enforcing a max number of replicas could imply concurrency problems
     //public final int maxNumberOfReplicas;
     
 
-    public Quorum(int writeQuorum, int readQuorum) throws QuorumNumberException {
+    public Quorum(int writeQuorum, int readQuorum, DSState dsState) throws QuorumNumberException {
         if (writeQuorum <= 0 || readQuorum <= 0) {
             throw(new QuorumNumberException());
         }
@@ -37,6 +41,7 @@ public class Quorum {
         this.writeQuorum = writeQuorum;
         this.readQuorum = readQuorum;
         this.maxReplicas = maxReplicas;
+        this.dsState = dsState;
     }
 
     /**
@@ -52,7 +57,7 @@ public class Quorum {
 
         message.setQuorum();
 
-        final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum);
+        final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum - 1);
 
         Scanner scanner;
         final Gson gson = new Gson();
@@ -66,6 +71,12 @@ public class Quorum {
             }
             socket.close();
         }
+
+        //Attempts to write in the local replica
+        try {
+            dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
+            successfulReplicas++;
+        } catch(DSStateException ignored) {}
 
         return successfulReplicas > writeQuorum / 2;
     }
@@ -86,7 +97,7 @@ public class Quorum {
 
         //Pairs every replica with its queried element
         final HashMap<Socket, DSElement> quorumValues = new HashMap<>();
-        replicas.sendMessageToBatch(message, readQuorum).forEach((Socket socket) -> quorumValues.put(socket, new DSNullElement()));
+        replicas.sendMessageToBatch(message, readQuorum - 1).forEach((Socket socket) -> quorumValues.put(socket, new DSNullElement()));
 
         Scanner scanner;
         final Gson gson = new Gson();
@@ -104,6 +115,18 @@ public class Quorum {
             }
         }
 
+        //Reads local value
+        try {
+            DSElement localElement = dsState.read(message.getKey());
+            if (!localElement.isNull() && (currentReadElement.isNull() || localElement.getVersionNumber() > currentReadElement.getVersionNumber())) {
+                currentReadElement = localElement;
+            }
+            else if (!currentReadElement.isNull() && (localElement.isNull() || localElement.getVersionNumber() < currentReadElement.getVersionNumber())) {
+                //Read-repair on local replica
+                dsState.write(message.getKey(), currentReadElement);
+            }
+        } catch(DSStateException ignored) {}
+
         PrintWriter writer;
         for (Socket socket : quorumValues.keySet()) {
             writer = new PrintWriter(socket.getOutputStream(), true);
@@ -117,6 +140,7 @@ public class Quorum {
             }
             socket.close();
         }
+
 
         return currentReadElement;
     }

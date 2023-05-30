@@ -38,7 +38,7 @@ public class DataStoreNetwork {
      * This replica starts a new data store
      */
     public void initiateDataStore(int writeQuorum, int readQuorum) throws IOException, QuorumNumberException {
-        quorum = new Quorum(writeQuorum, readQuorum);
+        quorum = new Quorum(writeQuorum, readQuorum, dsState);
         replicas = new Replicas();
         requestsHandler = new CoordinatorHandler(replicas, quorum, dsState, port);
         begin();
