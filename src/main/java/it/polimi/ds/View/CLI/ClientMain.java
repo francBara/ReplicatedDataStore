@@ -105,7 +105,7 @@ public class ClientMain {
                 System.out.println(Colors.GREEN + "Write executed"+ Colors.RESET);
             }
             case "READ" -> {
-                String key = clientInput.nextLine(this.input,"Key to read from:");
+                String key = clientInput.nextLine(this.input,"Key to read from: ");
                 try {
                     DSElement dsElement = client.read(key);
                     if(dsElement.isNull()){
@@ -144,7 +144,7 @@ public class ClientMain {
             case "" -> System.out.print("");
             default -> {
                 System.out.println(Colors.RED+ "Cannot handle this operation!\n"+Colors.RESET);
-                System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'write many' to perform multiple writes.\nType 'help' in any moment for the list of possible actions.");
+                System.out.println("\nPerform a read by typing 'read' or a write by typing 'write'.\nType 'help' in any moment for the list of possible actions.");
             }
         }
     }

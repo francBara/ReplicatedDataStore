@@ -19,7 +19,7 @@ public class DSState {
      * @return
      * @throws DSStateException If some internal error occurs during reading
      */
-    public synchronized DSElement read(String key) throws DSStateException {
+    public DSElement read(String key) throws DSStateException {
         final DSElement dsElement = dataStore.get(key);
         if (dsElement == null) {
             return new DSNullElement();
