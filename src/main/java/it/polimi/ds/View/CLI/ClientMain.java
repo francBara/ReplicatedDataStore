@@ -1,6 +1,7 @@
 package it.polimi.ds.View.CLI;
 
 import it.polimi.ds.Client.Client;
+import it.polimi.ds.Client.Exceptions.ReadException;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 
 import java.io.BufferedReader;
@@ -113,7 +114,7 @@ public class ClientMain {
                     }else{
                         System.out.println(Colors.GREEN +"READ KEY: "+ key + "\nREAD VALUE: "+dsElement.getValue()+"\nVERSION NUMBER: "+dsElement.getVersionNumber()+ Colors.RESET);
                     }
-                } catch (IOException e) {
+                } catch (IOException | ReadException e) {
                     System.out.println(e);
                 }
             }

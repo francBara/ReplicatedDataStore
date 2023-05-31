@@ -43,31 +43,26 @@ public abstract class RequestsHandler {
             final DSElement dsElement = quorum.initReadQuorum(message, replicas);
 
             //This replica sends the most recent value to the client
+            writer.println(MessageType.OK);
             writer.println(new Gson().toJson(dsElement));
-        } catch(IOException | QuorumNumberException e) {
-            //TODO: Handle high quorum exception
-            System.out.println("Read error: " + e);
-            writer.println(new Message(MessageType.KO).toJson());
+        } catch(IOException e) {
+            //System.out.println("Read error: " + e);
+            writer.println(MessageType.KO);
         }
     }
 
     public void handleReadQuorum(PrintWriter writer, Scanner scanner, Message message) {
-        try {
-            Gson gson = new Gson();
+        Gson gson = new Gson();
 
-            //This replica replies to the read quorum with its version of the requested element
-            DSElement dsElement = dsState.read(message.getKey());
-            writer.println(gson.toJson(dsElement));
+        //This replica replies to the read quorum with its version of the requested element
+        DSElement dsElement = dsState.read(message.getKey());
+        writer.println(gson.toJson(dsElement));
 
-            //Read-repair in case of stale element
-            MessageType elementIsRecent = MessageType.valueOf(scanner.nextLine());
-            if (elementIsRecent == MessageType.KO) {
-                DSElement recentElement = gson.fromJson(scanner.nextLine(), DSElement.class);
-                dsState.write(message.getKey(), recentElement);
-            }
-        } catch(DSStateException e) {
-            //TODO: Handle KO in the other side
-            writer.println(new Message(MessageType.KO).toJson());
+        //Read-repair in case of stale element
+        MessageType elementIsRecent = MessageType.valueOf(scanner.nextLine());
+        if (elementIsRecent == MessageType.KO) {
+            DSElement recentElement = gson.fromJson(scanner.nextLine(), DSElement.class);
+            dsState.write(message.getKey(), recentElement);
         }
     }
 
@@ -85,20 +80,16 @@ public abstract class RequestsHandler {
             //This replica starts a write quorum
             final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
 
-            writer.println(new Message(quorumApproved ? MessageType.OK : MessageType.KO).toJson());
+            writer.println(quorumApproved ? MessageType.OK : MessageType.KO);
         } catch(IOException | QuorumNumberException e) {
             //TODO: Handle high quorum exception
-            System.out.println(e);
-            writer.println(new Message(MessageType.KO).toJson());
+            //System.out.println(e);
+            writer.println(MessageType.KO);
         }
     }
 
     public void handleWriteQuorum(PrintWriter writer, Message message) {
-        try {
-            dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
-            writer.println(new Message(MessageType.OK).toJson());
-        } catch(DSStateException e) {
-            writer.println(new Message(MessageType.KO).toJson());
-        }
+        dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
+        writer.println(new Message(MessageType.OK).toJson());
     }
 }

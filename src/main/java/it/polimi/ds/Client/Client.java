@@ -1,5 +1,6 @@
 package it.polimi.ds.Client;
 
+import it.polimi.ds.Client.Exceptions.ReadException;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import it.polimi.ds.Message.Message;
 import it.polimi.ds.Message.MessageType;
@@ -20,7 +21,7 @@ public class Client {
         this.dataStorePort = port;
     }
 
-    public DSElement read(String key) throws IOException {
+    public DSElement read(String key) throws IOException, ReadException {
         final Socket socket = new Socket(dataStoreAddress, dataStorePort);
         final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
         final Scanner scanner = new Scanner(socket.getInputStream());
@@ -30,7 +31,12 @@ public class Client {
 
         writer.println(message.toJson());
 
-        //TODO: Handle when reply is a KO message
+        final MessageType readSuccessful = MessageType.valueOf(scanner.nextLine());
+
+        if (readSuccessful == MessageType.KO) {
+            socket.close();
+            throw(new ReadException());
+        }
 
         final DSElement readValue = new Gson().fromJson(scanner.nextLine(), DSElement.class);
 
@@ -49,11 +55,11 @@ public class Client {
         message.setValue(value);
 
         writer.println(message.toJson());
-        final Message reply = new Gson().fromJson(scanner.nextLine(), Message.class);
+        final MessageType reply = MessageType.valueOf(scanner.nextLine());
 
         socket.close();
 
-        return reply.messageType == MessageType.OK;
+        return reply == MessageType.OK;
     }
 
     /**

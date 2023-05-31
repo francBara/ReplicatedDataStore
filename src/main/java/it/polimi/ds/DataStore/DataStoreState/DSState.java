@@ -17,9 +17,8 @@ public class DSState {
      *
      * @param key
      * @return
-     * @throws DSStateException If some internal error occurs during reading
      */
-    public DSElement read(String key) throws DSStateException {
+    public DSElement read(String key) {
         final DSElement dsElement = dataStore.get(key);
         if (dsElement == null) {
             return new DSNullElement();
@@ -31,9 +30,8 @@ public class DSState {
      *
      * @param key
      * @param value
-     * @throws DSStateException If some internal error occurs during writing
      */
-    public synchronized void write(String key, String value, int versionNumber) throws DSStateException {
+    public synchronized void write(String key, String value, int versionNumber) {
         if (dataStore.containsKey(key)) {
             DSElement dsElement = dataStore.get(key);
             dsElement.setValue(value);
@@ -45,7 +43,7 @@ public class DSState {
         writeInFile();
     }
 
-    public synchronized void write(String key, DSElement element) throws DSStateException {
+    public synchronized void write(String key, DSElement element) {
         dataStore.put(key, element);
         writeInFile();
     }

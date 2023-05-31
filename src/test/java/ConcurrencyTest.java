@@ -1,3 +1,4 @@
+import it.polimi.ds.Client.Exceptions.ReadException;
 import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
@@ -79,14 +80,14 @@ public class ConcurrencyTest extends TestCase {
                 new Thread(() -> {
                     try {
                         readValues.add(client.read("Key"));
-                    } catch(IOException e) {fail();}
+                    } catch(IOException | ReadException e) {fail();}
                 }).start();
             }
 
             for (DSElement element : readValues) {
                 assertEquals(readValue, element);
             }
-        } catch(IOException e) {
+        } catch(IOException | ReadException e) {
             fail();
         }
     }

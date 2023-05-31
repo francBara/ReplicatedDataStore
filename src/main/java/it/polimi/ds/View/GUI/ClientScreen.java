@@ -1,6 +1,7 @@
 package it.polimi.ds.View.GUI;
 
 import it.polimi.ds.Client.Client;
+import it.polimi.ds.Client.Exceptions.ReadException;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import it.polimi.ds.View.CLI.InputValidation;
 
@@ -239,7 +240,7 @@ public class ClientScreen extends LayoutManager {
                             DSElement dsElement;
                             try {
                                 dsElement = client.read(text);
-                            } catch (IOException ex) {
+                            } catch (IOException | ReadException ex) {
                                 throw new RuntimeException(ex);
                             }
                             if(dsElement.isNull()) {

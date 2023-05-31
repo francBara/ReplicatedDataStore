@@ -73,10 +73,8 @@ public class Quorum {
         }
 
         //Attempts to write in the local replica
-        try {
-            dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
-            successfulReplicas++;
-        } catch(DSStateException ignored) {}
+        dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
+        successfulReplicas++;
 
         return successfulReplicas > writeQuorum / 2;
     }
@@ -88,7 +86,7 @@ public class Quorum {
      * @return The most recent element read from the replicas
      * @throws IOException
      */
-    public DSElement initReadQuorum(Message message, Replicas replicas) throws IOException, QuorumNumberException {
+    public DSElement initReadQuorum(Message message, Replicas replicas) throws IOException {
         if (message.getType() != MessageType.Read) {
             throw(new RuntimeException());
         }
@@ -116,16 +114,14 @@ public class Quorum {
         }
 
         //Reads local value
-        try {
-            DSElement localElement = dsState.read(message.getKey());
-            if (!localElement.isNull() && (currentReadElement.isNull() || localElement.getVersionNumber() > currentReadElement.getVersionNumber())) {
-                currentReadElement = localElement;
-            }
-            else if (!currentReadElement.isNull() && (localElement.isNull() || localElement.getVersionNumber() < currentReadElement.getVersionNumber())) {
-                //Read-repair on local replica
-                dsState.write(message.getKey(), currentReadElement);
-            }
-        } catch(DSStateException ignored) {}
+        DSElement localElement = dsState.read(message.getKey());
+        if (!localElement.isNull() && (currentReadElement.isNull() || localElement.getVersionNumber() > currentReadElement.getVersionNumber())) {
+            currentReadElement = localElement;
+        }
+        else if (!currentReadElement.isNull() && (localElement.isNull() || localElement.getVersionNumber() < currentReadElement.getVersionNumber())) {
+            //Read-repair on local replica
+            dsState.write(message.getKey(), currentReadElement);
+        }
 
         PrintWriter writer;
         for (Socket socket : quorumValues.keySet()) {
@@ -140,7 +136,6 @@ public class Quorum {
             }
             socket.close();
         }
-
 
         return currentReadElement;
     }
