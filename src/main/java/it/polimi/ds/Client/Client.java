@@ -69,15 +69,17 @@ public class Client {
      * @param value
      */
     public void writeMany(int count, String key, String value) {
-        for (int i = 0; i < count; i++) {
-            int finalI = i;
-            try {
-                new Thread(() -> {
-                    try {
-                        write(key, value + finalI);
-                    } catch (Exception ignored) {}
-                }).start();
-            } catch(Exception ignored) {}
-        }
+        new Thread(() -> {
+            for (int i = 0; i < count; i++) {
+                int finalI = i;
+                try {
+                    new Thread(() -> {
+                        try {
+                            write(key, value + finalI);
+                        } catch (Exception ignored) {}
+                    }).start();
+                } catch(Exception ignored) {}
+            }
+        }).start();
     }
 }
