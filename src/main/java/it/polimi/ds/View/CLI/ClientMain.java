@@ -115,7 +115,8 @@ public class ClientMain {
                         System.out.println(Colors.GREEN +"READ KEY: "+ key + "\nREAD VALUE: "+dsElement.getValue()+"\nVERSION NUMBER: "+dsElement.getVersionNumber()+ Colors.RESET);
                     }
                 } catch (IOException | ReadException e) {
-                    System.out.println(e);
+                    System.out.println("Connection error");
+                    //System.out.println(e);
                 }
             }
             case "HELP" -> {

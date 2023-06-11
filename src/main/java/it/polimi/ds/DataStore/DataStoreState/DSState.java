@@ -18,7 +18,7 @@ public class DSState {
      * @param key
      * @return
      */
-    public DSElement read(String key) {
+    public synchronized DSElement read(String key) {
         final DSElement dsElement = dataStore.get(key);
         if (dsElement == null) {
             return new DSNullElement();
