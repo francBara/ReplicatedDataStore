@@ -40,18 +40,20 @@ public class CoordinatorHandler extends RequestsHandler {
             writer.println(gson.toJson(quorum));
 
             new Thread(() -> {
-                ack = scanner.nextLine();
+                try {
+                    ack = scanner.nextLine();
+                } catch(Exception ignored) {}
             }).start();
 
             for (int i = 0; i < 10; i++) {
                 if (!ack.isEmpty() && !MessageType.valueOf(ack).equals(MessageType.OK)) {
                     return;
                 }
-                else if (!ack.isEmpty()) {
+                else if (!ack.isEmpty() && MessageType.valueOf(ack).equals(MessageType.OK)) {
                     break;
                 }
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(200);
                 } catch(InterruptedException ignored) {}
             }
 
