@@ -23,6 +23,8 @@ public class CoordinatorHandler extends RequestsHandler {
 
     }
 
+    String ack = "";
+
     @Override
     public void handleJoin(Socket clientSocket, PrintWriter writer, Scanner scanner, Message message) {
         synchronized (this) {
@@ -37,7 +39,23 @@ public class CoordinatorHandler extends RequestsHandler {
             writer.println(port);
             writer.println(gson.toJson(quorum));
 
-            if (!MessageType.valueOf(scanner.nextLine()).equals(MessageType.OK)) {
+            new Thread(() -> {
+                ack = scanner.nextLine();
+            }).start();
+
+            for (int i = 0; i < 10; i++) {
+                if (!ack.isEmpty() && !MessageType.valueOf(ack).equals(MessageType.OK)) {
+                    return;
+                }
+                else if (!ack.isEmpty()) {
+                    break;
+                }
+                try {
+                    Thread.sleep(500);
+                } catch(InterruptedException ignored) {}
+            }
+
+            if (ack.isEmpty()) {
                 return;
             }
 

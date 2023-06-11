@@ -21,9 +21,6 @@ public class LocalReplicasFactory {
                     //System.out.println(ignored);
                 }
             }).start();
-            try {
-                Thread.sleep(100);
-            } catch(InterruptedException ignored) {}
         }
 
         return replicas;
