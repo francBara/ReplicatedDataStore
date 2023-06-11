@@ -68,7 +68,6 @@ public class ClientScreen extends LayoutManager {
                     bottomBanner.setText("INVALID");
                 }
                 else {
-                    // TODO: disattivare i campi e chiamare il resto
                     client = new Client();
                     client.bind(ip, Integer.parseInt(port));
                     centralPanel.removeAll();
@@ -93,18 +92,16 @@ public class ClientScreen extends LayoutManager {
                         next = new RoleScreen("Menu", "CHOOSE BETWEEN A CLIENT OR REPLICA", "Select the desired option");
                         transition(getLocation(), getSize());
                     });
-                }else {
-                    if (previousPage.getText().equals("EXIT")){
-                        infoBanner.setText("Are you sure you want to disconnect?");
-                        topPanel.add(disconnect, FlowLayout.RIGHT);
-                        previousPage.setText("NO");
-                    }else if(previousPage.getText().equals("NO")) {
-                        previousPage.setText("Back");
-                        topPanel.remove(disconnect);
-                    }
-                    topPanel.revalidate();
-                    topPanel.repaint();
+                }else if(previousPage.getText().equals("NO")){
+                    resetButtons();
                 }
+                else {
+                    infoBanner.setText("Are you sure you want to disconnect?");
+                    topPanel.add(disconnect, FlowLayout.RIGHT);
+                    previousPage.setText("NO");
+                }
+                topPanel.revalidate();
+                topPanel.repaint();
             }
         });
 
@@ -294,5 +291,10 @@ public class ClientScreen extends LayoutManager {
         confirmOperation.setVisible(true);
         keyField.setText("");
         valueField.setText("");
+        previousPage.setText("Exit");
+        infoBanner.setText("Perform a read or a write");
+        topPanel.remove(disconnect);
+        topPanel.revalidate();
+        topPanel.repaint();
     }
 }
