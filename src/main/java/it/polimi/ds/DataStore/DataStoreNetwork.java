@@ -93,7 +93,7 @@ public class DataStoreNetwork {
         //If a peer, notifies the coordinator to be ready to receive requests
         requestsHandler.ackCoordinator();
 
-        System.out.println("\nReplica ready");
+        System.out.println("\nReplica ready on port " + port);
 
         while (true) {
             //For every open connection, a new thread starts
