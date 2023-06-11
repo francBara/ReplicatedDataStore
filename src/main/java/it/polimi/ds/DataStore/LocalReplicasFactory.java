@@ -18,7 +18,7 @@ public class LocalReplicasFactory {
                 try {
                     dsn.joinDataStore(coordinatorAddress, coordinatorPort);
                 } catch (Exception ignored) {
-                    System.out.println(ignored);
+                    //System.out.println(ignored);
                 }
             }).start();
         }

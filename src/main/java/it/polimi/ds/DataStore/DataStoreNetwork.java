@@ -41,6 +41,7 @@ public class DataStoreNetwork {
         quorum = new Quorum(writeQuorum, readQuorum, dsState);
         replicas = new Replicas();
         requestsHandler = new CoordinatorHandler(replicas, quorum, dsState, port);
+        System.out.println("Maximum number of replicas: " + quorum.maxReplicas);
         begin();
     }
 

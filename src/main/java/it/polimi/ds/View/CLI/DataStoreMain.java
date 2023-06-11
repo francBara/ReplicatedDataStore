@@ -44,10 +44,10 @@ public class DataStoreMain {
 
         if (s.equals("initiate")) {
             String wQuorum, rQuorum;
-            do{
+            do {
                 wQuorum = clientInput.nextLine(input, "Choose the write Quorum number\n> ");
                 rQuorum = clientInput.nextLine(input, "Choose the read Quorum number\n> ");
-            }while(!(inputValidation.validateInt(wQuorum) && inputValidation.validateInt(rQuorum)));
+            } while(!(inputValidation.validateInt(wQuorum) && inputValidation.validateInt(rQuorum)));
 
             try {
                 dsCommunication.initiateDataStore(Integer.parseInt(wQuorum), Integer.parseInt(rQuorum));
@@ -62,18 +62,18 @@ public class DataStoreMain {
 
             do {
                 ip = clientInput.nextLine(input, "Please insert the ip address of the datastore\n> ");
-            }while(!inputValidation.validateIp(ip));
+            } while(!inputValidation.validateIp(ip));
 
             do {
                 dataStorePort = clientInput.nextLine(input, "Please insert the datastore port number\n> ");
-            }while(!inputValidation.validateInt(dataStorePort));
+            } while(!inputValidation.validateInt(dataStorePort));
 
             do {
                 localReplicas = clientInput.nextLine(input, "How many replicas do you want to locally create?\n> ");
-            }while(!inputValidation.validateInt(dataStorePort));
+            } while(!inputValidation.validateInt(dataStorePort));
 
             try {
-                HashSet<DataStoreNetwork> replicas = new LocalReplicasFactory().getReplicas(ip, Integer.parseInt(dataStorePort), port, Integer.parseInt(localReplicas));
+                new LocalReplicasFactory().getReplicas(ip, Integer.parseInt(dataStorePort), port, Integer.parseInt(localReplicas));
                 //dsCommunication.joinDataStore(ip, Integer.parseInt(dataStorePort));
             } catch(RuntimeException e) {
                 System.out.println(e);
