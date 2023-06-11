@@ -1,7 +1,6 @@
 package it.polimi.ds.View.CLI;
 
 import it.polimi.ds.DataStore.DataStoreNetwork;
-import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
 import it.polimi.ds.DataStore.LocalReplicasFactory;
 
