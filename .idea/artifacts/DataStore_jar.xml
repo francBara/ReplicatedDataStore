@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="DataStore:jar">
+    <output-path>$USER_HOME$/Desktop/DataStore</output-path>
+    <root id="archive" name="DataStore.jar">
+      <element id="module-output" name="DataStore" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.8.6/gson-2.8.6.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
