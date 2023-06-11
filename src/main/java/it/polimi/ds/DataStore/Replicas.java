@@ -31,7 +31,7 @@ public class Replicas {
                 writer.println(replicaJson);
                 socket.close();
             } catch(IOException e) {
-                System.out.println("Kaja Error on " + replica.getAddress() + " " + replica.getPort() + ": " + e);
+                //System.out.println("Kaja Error on " + replica.getAddress() + " " + replica.getPort() + ": " + e);
             }
         }
     }
