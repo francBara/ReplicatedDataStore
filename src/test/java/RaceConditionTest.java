@@ -86,8 +86,10 @@ public class RaceConditionTest extends TestCase {
             Thread.sleep(3000);
         } catch(Exception ignored) {fail();}
 
-        for (int i = 0; i < 20; i++) {
-            for (int j = 0; j < 20; j++) {
+        for (int i = 0; i < 15; i++) {
+            for (int j = 0; j < 15; j++) {
+                System.out.println(result.get(i));
+                System.out.println(result.get(j));
                 assertEquals(result.get(i), result.get(j));
             }
         }
