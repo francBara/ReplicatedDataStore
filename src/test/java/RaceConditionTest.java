@@ -23,6 +23,10 @@ public class RaceConditionTest extends TestCase {
             }
         }).start();
 
+        try {
+            Thread.sleep(1000);
+        } catch(InterruptedException ignored) {}
+
         for (int i = 0; i < 20; i++) {
             int finalI = i;
             new Thread(() -> {
@@ -31,14 +35,18 @@ public class RaceConditionTest extends TestCase {
                 try {
                     replica.joinDataStore("127.0.0.1", 5000);
                 } catch(Exception e) {
+                    System.out.println(e);
                     fail();
                 }
             }).start();
         }
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         } catch(Exception ignored) {fail();}
+
+
+        assertEquals(19, coordinator.getReplicasSize());
 
 
         for (int i = 0; i < 10; i++) {
@@ -68,6 +76,7 @@ public class RaceConditionTest extends TestCase {
                     try {
                         result.get(finalI).add(client.read("Luca"));
                     } catch(Exception ignored) {
+                        System.out.println(ignored);
                         fail();
                     }
                 }).start();
