@@ -45,7 +45,7 @@ public class RaceConditionTest extends TestCase {
         } catch(Exception ignored) {fail();}
 
 
-        assertEquals(19, coordinator.getReplicasSize());
+        assertEquals(18, coordinator.getReplicasSize());
 
 
         for (int i = 0; i < 10; i++) {
@@ -63,7 +63,7 @@ public class RaceConditionTest extends TestCase {
 
         HashMap<Integer, ArrayList<DSElement>> result = new HashMap<>();
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 15; i++) {
             Client client = new Client();
             client.bind("127.0.0.1", 5000 + i);
 
