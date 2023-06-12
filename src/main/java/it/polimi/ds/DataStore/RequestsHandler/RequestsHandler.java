@@ -95,6 +95,7 @@ public abstract class RequestsHandler {
 
     public void handleWriteQuorum(PrintWriter writer, Scanner scanner) {
         //TODO: Handle request of version number
+        System.out.println("OHOHOHOH");
         Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
         writer.println(new Message(MessageType.OK).toJson());
         MessageType ack = MessageType.valueOf(scanner.nextLine());

@@ -57,24 +57,26 @@ public class Quorum {
             throw(new RuntimeException());
         }
 
-        final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum - 1);
+        message.setQuorum();
 
+        System.out.println("DEBUG 0");
+
+        final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum - 1);
+        System.out.println("DEBUG 1");
 
         //Reads the value to write, if it already exists, the version number is propagated
         final Message readMessage = new Message(MessageType.Read);
         readMessage.setKey(message.getKey());
 
-        System.out.println("DEBUG 0");
-
+        System.out.println("DEBUG 2");
         final DSElement dsElement = initReadQuorum(readMessage, replicas);
 
-        System.out.println("DEBUG 1");
+        System.out.println("DEBUG 3");
 
         if (!dsElement.isNull()) {
             message.setVersionNumber(dsElement.getVersionNumber());
         }
 
-        message.setQuorum();
 
 
        for (Socket socket : quorumReplicas) {

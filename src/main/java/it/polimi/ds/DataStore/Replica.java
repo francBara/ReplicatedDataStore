@@ -17,13 +17,12 @@ public class Replica {
     }
 
     public Socket sendMessage(Message message) throws IOException {
-        System.out.println("A");
         if (socket == null || socket.isClosed()) {
+            System.out.println("Opened new");
             socket = new Socket(address, port);
         }
         final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
         writer.println(message.toJson());
-        System.out.println("B");
         return socket;
     }
 
