@@ -9,15 +9,21 @@ public class Replica {
     private final String address;
     private final int port;
 
+    private transient Socket socket;
+
     public Replica(String address, int port) {
         this.address = address;
         this.port = port;
     }
 
     public Socket sendMessage(Message message) throws IOException {
-        Socket socket = new Socket(address, port);
+        System.out.println("A");
+        if (socket == null || socket.isClosed()) {
+            socket = new Socket(address, port);
+        }
         final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
         writer.println(message.toJson());
+        System.out.println("B");
         return socket;
     }
 

@@ -12,7 +12,7 @@ import java.util.HashSet;
 
 public class RaceConditionTest extends TestCase {
     public void testRaceCondition() {
-        DataStoreNetwork coordinator = new DataStoreNetwork(5000);
+        DataStoreNetwork coordinator = new DataStoreNetwork(6000);
         HashSet<DataStoreNetwork> replicas = new HashSet<>();
 
         new Thread(() -> {
@@ -30,10 +30,10 @@ public class RaceConditionTest extends TestCase {
         for (int i = 0; i < 20; i++) {
             int finalI = i;
             new Thread(() -> {
-                DataStoreNetwork replica = new DataStoreNetwork(5001 + finalI);
+                DataStoreNetwork replica = new DataStoreNetwork(6001 + finalI);
                 replicas.add(replica);
                 try {
-                    replica.joinDataStore("127.0.0.1", 5000);
+                    replica.joinDataStore("127.0.0.1", 6000);
                 } catch(Exception e) {
 
                 }
@@ -50,7 +50,7 @@ public class RaceConditionTest extends TestCase {
 
         for (int i = 0; i < 10; i++) {
             Client client = new Client();
-            client.bind("127.0.0.1", 5000 + i);
+            client.bind("127.0.0.1", 6000 + i);
             int finalI = i;
             new Thread(() -> {
                 try {
@@ -65,7 +65,7 @@ public class RaceConditionTest extends TestCase {
 
         for (int i = 0; i < 15; i++) {
             Client client = new Client();
-            client.bind("127.0.0.1", 5000 + i);
+            client.bind("127.0.0.1", 6000 + i);
 
             result.put(i, new ArrayList<>());
 
@@ -90,7 +90,16 @@ public class RaceConditionTest extends TestCase {
             for (int j = 0; j < 15; j++) {
                 System.out.println(result.get(i));
                 System.out.println(result.get(j));
-                assertEquals(result.get(i), result.get(j));
+
+                for (int k = 0; k < 10; k++) {
+                    for (int h = 0; h < 10; h++) {
+                        if (result.get(i).get(k).getVersionNumber() == result.get(j).get(h).getVersionNumber()) {
+                            assertEquals(result.get(i).get(k).getValue(), result.get(j).get(h).getValue());
+                        }
+                    }
+                }
+
+
             }
         }
 

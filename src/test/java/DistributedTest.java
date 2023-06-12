@@ -42,6 +42,7 @@ public class DistributedTest extends TestCase {
             }).start();
         }
 
+
         try {
             Thread.sleep(1000);
         } catch(Exception ignored) {fail();}
@@ -55,6 +56,7 @@ public class DistributedTest extends TestCase {
                 } catch(FullDataStoreException ignored) {} catch(IOException ignored) {fail();}
             }).start();
         }
+
 
         try {
             Thread.sleep(3000);
@@ -70,8 +72,10 @@ public class DistributedTest extends TestCase {
         final Client client = new Client();
         client.bind("127.0.0.1", 5000);
 
+
         try {
             assertTrue(client.write("Alen", "Kaja"));
+
 
             for (int i = 0; i < 11; i++) {
                 client.bind("127.0.0.1", 5000 + i);
@@ -81,6 +85,7 @@ public class DistributedTest extends TestCase {
             }
 
             client.bind("127.0.0.1", 5001);
+
 
             assertTrue(client.write("Kaja", "Alen"));
             assertTrue(client.write("Distributed", "Systems"));

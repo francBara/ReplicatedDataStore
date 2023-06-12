@@ -60,6 +60,7 @@ public class DataStoreNetwork {
 
         writer.println(message.toJson());
 
+
         final MessageType joinApproved = MessageType.valueOf(scanner.nextLine());
 
         if (joinApproved == MessageType.KO) {
@@ -73,8 +74,10 @@ public class DataStoreNetwork {
         final Gson gson = new Gson();
 
         replicas = gson.fromJson(scanner.nextLine(), Replicas.class);
+
         replicas.addReplica(new Replica(socket.getInetAddress().toString().substring(1), scanner.nextInt()));
         scanner.nextLine();
+
         quorum = gson.fromJson(scanner.nextLine(), Quorum.class);
 
         requestsHandler = new PeerHandler(replicas, quorum, dsState, port, socket);
@@ -128,10 +131,24 @@ public class DataStoreNetwork {
                     requestsHandler.handleReadQuorum(writer, scanner, message);
                 }
                 else if (message.messageType == MessageType.Write) {
-                    requestsHandler.handleWrite(writer, message);
+                    if (quorum.isLocked()) {
+                        writer.println(MessageType.KO);
+                    }
+                    else {
+                        quorum.setLocked(true);
+                        requestsHandler.handleWrite(writer, message);
+                        quorum.setLocked(false);
+                    }
                 }
                 else if (message.messageType == MessageType.WriteQuorum) {
-                    requestsHandler.handleWriteQuorum(writer, message);
+                    if (quorum.isLocked()) {
+                        writer.println(new Message(MessageType.KO));
+                    }
+                    else {
+                        quorum.setLocked(true);
+                        requestsHandler.handleWriteQuorum(writer, scanner);
+                        quorum.setLocked(false);
+                    }
                 }
                 try {
                     clientSocket.close();

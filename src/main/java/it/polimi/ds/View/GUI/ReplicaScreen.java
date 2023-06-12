@@ -35,7 +35,7 @@ public class ReplicaScreen extends LayoutManager {
         upperGbc.gridx = 0;
         upperGbc.gridy = 0;
         upperGbc.anchor = GridBagConstraints.CENTER;
-        upperGbc.insets = new Insets(0, 0, 0, 0);
+        upperGbc.insets = new Insets(0, 0, 20, 0);
 
         initiateButton = new JButton("INITIATE");
         buttonList.add(initiateButton);

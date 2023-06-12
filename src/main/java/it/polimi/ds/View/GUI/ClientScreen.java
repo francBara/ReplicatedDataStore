@@ -147,7 +147,7 @@ public class ClientScreen extends LayoutManager {
 
         gbc.gridy++;
         keyField = new JTextField();
-        keyField.setFont(changeFont(fontPath,18));
+        keyField.setFont(changeFont(18));
         keyField.setPreferredSize(new Dimension(150, 30));
         keyField.setEnabled(false);
         centralPanel.add(keyField, gbc);
@@ -160,7 +160,7 @@ public class ClientScreen extends LayoutManager {
         gbc.gridy++;
         valueField = new JTextField();
         valueField.setPreferredSize(new Dimension(150, 30));
-        valueField.setFont(changeFont(fontPath,18));
+        valueField.setFont(changeFont(18));
         valueField.setEnabled(false);
         centralPanel.add(valueField, gbc);
 

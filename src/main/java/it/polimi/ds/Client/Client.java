@@ -54,8 +54,11 @@ public class Client {
         message.setKey(key);
         message.setValue(value);
 
+
         writer.println(message.toJson());
+        System.out.println("DEBUG 0");
         final MessageType reply = MessageType.valueOf(scanner.nextLine());
+        System.out.println("DEBUG 1");
 
         socket.close();
 

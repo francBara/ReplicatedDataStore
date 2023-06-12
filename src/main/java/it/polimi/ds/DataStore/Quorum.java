@@ -23,6 +23,8 @@ public class Quorum {
 
     final DSState dsState;
 
+    private boolean isLocked = false;
+
     //Enforcing a max number of replicas could imply concurrency problems
     //public final int maxNumberOfReplicas;
     
@@ -55,9 +57,29 @@ public class Quorum {
             throw(new RuntimeException());
         }
 
+        final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum - 1);
+
+
+        //Reads the value to write, if it already exists, the version number is propagated
+        final Message readMessage = new Message(MessageType.Read);
+        readMessage.setKey(message.getKey());
+
+        System.out.println("DEBUG 0");
+
+        final DSElement dsElement = initReadQuorum(readMessage, replicas);
+
+        System.out.println("DEBUG 1");
+
+        if (!dsElement.isNull()) {
+            message.setVersionNumber(dsElement.getVersionNumber());
+        }
+
         message.setQuorum();
 
-        final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum - 1);
+
+       for (Socket socket : quorumReplicas) {
+           new PrintWriter(socket.getOutputStream()).println(message);
+       }
 
         Scanner scanner;
         final Gson gson = new Gson();
@@ -69,14 +91,21 @@ public class Quorum {
             if (writeAck.messageType == MessageType.OK) {
                 successfulReplicas++;
             }
-            socket.close();
         }
 
-        //Attempts to write in the local replica
+        //Writes in the local replica
         dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
         successfulReplicas++;
 
-        return successfulReplicas > writeQuorum / 2;
+        if (successfulReplicas > writeQuorum / 2) {
+            for (Socket socket : quorumReplicas) {
+                new PrintWriter(socket.getOutputStream(), true).println(MessageType.OK);
+                socket.close();
+            }
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -95,7 +124,10 @@ public class Quorum {
 
         //Pairs every replica with its queried element
         final HashMap<Socket, DSElement> quorumValues = new HashMap<>();
+
+
         replicas.sendMessageToBatch(message, readQuorum - 1).forEach((Socket socket) -> quorumValues.put(socket, new DSNullElement()));
+
 
         Scanner scanner;
         final Gson gson = new Gson();
@@ -105,6 +137,7 @@ public class Quorum {
             scanner = new Scanner(socket.getInputStream());
 
             DSElement readElement = gson.fromJson(scanner.nextLine(), DSElement.class);
+
             quorumValues.put(socket, readElement);
 
             //The most recent element is chosen
@@ -152,5 +185,13 @@ public class Quorum {
         else {
             return readWriteConflicts - 1;
         }
+    }
+
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public void setLocked(boolean isLocked) {
+        this.isLocked = isLocked;
     }
 }

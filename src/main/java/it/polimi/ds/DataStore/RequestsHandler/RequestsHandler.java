@@ -46,7 +46,7 @@ public abstract class RequestsHandler {
             writer.println(MessageType.OK);
             writer.println(new Gson().toJson(dsElement));
         } catch(IOException e) {
-            //System.out.println("Read error: " + e);
+            System.out.println("Read error: " + e);
             writer.println(MessageType.KO);
         }
     }
@@ -58,16 +58,19 @@ public abstract class RequestsHandler {
         DSElement dsElement = dsState.read(message.getKey());
         writer.println(gson.toJson(dsElement));
 
+
         //Read-repair in case of stale element
         MessageType elementIsRecent = MessageType.valueOf(scanner.nextLine());
         if (elementIsRecent == MessageType.KO) {
             DSElement recentElement = gson.fromJson(scanner.nextLine(), DSElement.class);
             dsState.write(message.getKey(), recentElement);
         }
+
     }
 
     public void handleWrite(PrintWriter writer, Message message) {
         try {
+            /*
             //Reads the value to write, if it already exists, the version number is propagated
             final Message readMessage = new Message(MessageType.Read);
             readMessage.setKey(message.getKey());
@@ -76,6 +79,8 @@ public abstract class RequestsHandler {
             if (!dsElement.isNull()) {
                 message.setVersionNumber(dsElement.getVersionNumber());
             }
+
+             */
 
             //This replica starts a write quorum
             final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
@@ -88,8 +93,13 @@ public abstract class RequestsHandler {
         }
     }
 
-    public void handleWriteQuorum(PrintWriter writer, Message message) {
-        dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
+    public void handleWriteQuorum(PrintWriter writer, Scanner scanner) {
+        //TODO: Handle request of version number
+        Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
         writer.println(new Message(MessageType.OK).toJson());
+        MessageType ack = MessageType.valueOf(scanner.nextLine());
+        if (ack == MessageType.OK) {
+            dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
+        }
     }
 }
