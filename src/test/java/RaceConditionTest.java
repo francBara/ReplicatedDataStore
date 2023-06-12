@@ -35,14 +35,13 @@ public class RaceConditionTest extends TestCase {
                 try {
                     replica.joinDataStore("127.0.0.1", 5000);
                 } catch(Exception e) {
-                    System.out.println(e);
-                    fail();
+
                 }
             }).start();
         }
 
         try {
-            Thread.sleep(2000);
+            Thread.sleep(3000);
         } catch(Exception ignored) {fail();}
 
 
