@@ -23,7 +23,7 @@ public class Quorum {
 
     final DSState dsState;
 
-    private boolean isLocked = false;
+    private int lockedBy = 0;
 
     //Enforcing a max number of replicas could imply concurrency problems
     //public final int maxNumberOfReplicas;
@@ -57,56 +57,43 @@ public class Quorum {
             throw(new RuntimeException());
         }
 
+        final Gson gson = new Gson();
+
         message.setQuorum();
 
-        System.out.println("DEBUG 0");
-
         final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum - 1);
-        System.out.println("DEBUG 1");
 
-        //Reads the value to write, if it already exists, the version number is propagated
-        final Message readMessage = new Message(MessageType.Read);
-        readMessage.setKey(message.getKey());
+        int availableReplicas = 1;
 
-        System.out.println("DEBUG 2");
-        final DSElement dsElement = initReadQuorum(readMessage, replicas);
-
-        System.out.println("DEBUG 3");
-
-        if (!dsElement.isNull()) {
-            message.setVersionNumber(dsElement.getVersionNumber());
-        }
-
-
-
-       for (Socket socket : quorumReplicas) {
-           new PrintWriter(socket.getOutputStream()).println(message);
-       }
-
-        Scanner scanner;
-        final Gson gson = new Gson();
-        int successfulReplicas = 0;
-
+        DSElement mostRecentElement = new DSNullElement();
         for (Socket socket : quorumReplicas) {
-            scanner = new Scanner(socket.getInputStream());
-            Message writeAck = gson.fromJson(scanner.nextLine(), Message.class);
-            if (writeAck.messageType == MessageType.OK) {
-                successfulReplicas++;
+            final Scanner scanner = new Scanner(socket.getInputStream());
+            if (MessageType.valueOf(scanner.nextLine()) == MessageType.OK) {
+                availableReplicas++;
+            }
+            else {
+                continue;
+            }
+            DSElement lastElement = gson.fromJson(scanner.nextLine(), DSElement.class);
+            if (!lastElement.isNull() && (mostRecentElement.isNull() || lastElement.getVersionNumber() > mostRecentElement.getVersionNumber())) {
+                mostRecentElement = lastElement;
             }
         }
 
-        //Writes in the local replica
-        dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
-        successfulReplicas++;
+        if (!mostRecentElement.isNull()) {
+            message.setVersionNumber(mostRecentElement.getVersionNumber());
+        }
 
-        if (successfulReplicas > writeQuorum / 2) {
+        if (availableReplicas > writeQuorum / 2) {
+            //Writes in the local replica
+            dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
+
             for (Socket socket : quorumReplicas) {
-                new PrintWriter(socket.getOutputStream(), true).println(MessageType.OK);
+                new PrintWriter(socket.getOutputStream(), true).println(gson.toJson(message));
                 socket.close();
             }
             return true;
         }
-
         return false;
     }
 
@@ -127,9 +114,7 @@ public class Quorum {
         //Pairs every replica with its queried element
         final HashMap<Socket, DSElement> quorumValues = new HashMap<>();
 
-
         replicas.sendMessageToBatch(message, readQuorum - 1).forEach((Socket socket) -> quorumValues.put(socket, new DSNullElement()));
-
 
         Scanner scanner;
         final Gson gson = new Gson();
@@ -189,11 +174,20 @@ public class Quorum {
         }
     }
 
-    public boolean isLocked() {
-        return isLocked;
+    public synchronized boolean isLocked() {
+        return lockedBy > 0;
     }
 
-    public void setLocked(boolean isLocked) {
-        this.isLocked = isLocked;
+    public synchronized boolean isSafelyLocked() {
+        return lockedBy == 1;
+    }
+
+    public synchronized void setLocked(boolean isLocked) {
+        if (isLocked) {
+            lockedBy++;
+        }
+        else {
+            lockedBy--;
+        }
     }
 }

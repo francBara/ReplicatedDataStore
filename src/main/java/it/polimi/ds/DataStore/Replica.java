@@ -9,17 +9,18 @@ public class Replica {
     private final String address;
     private final int port;
 
-    private transient Socket socket;
-
     public Replica(String address, int port) {
         this.address = address;
         this.port = port;
     }
 
     public Socket sendMessage(Message message) throws IOException {
-        if (socket == null || socket.isClosed()) {
-            System.out.println("Opened new");
+        Socket socket;
+        try {
             socket = new Socket(address, port);
+        } catch(IOException e) {
+            System.out.println("Error: " + port);
+            throw(e);
         }
         final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
         writer.println(message.toJson());

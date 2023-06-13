@@ -136,18 +136,32 @@ public class DataStoreNetwork {
                     }
                     else {
                         quorum.setLocked(true);
-                        requestsHandler.handleWrite(writer, message);
-                        quorum.setLocked(false);
+                        //TODO: Check that it makes sense
+                        if (quorum.isSafelyLocked()) {
+                            requestsHandler.handleWrite(writer, message);
+                            quorum.setLocked(false);
+                        }
+                        else {
+                            quorum.setLocked(false);
+                            writer.println(MessageType.KO);
+                        }
                     }
                 }
                 else if (message.messageType == MessageType.WriteQuorum) {
                     if (quorum.isLocked()) {
-                        writer.println(new Message(MessageType.KO));
+                        writer.println(MessageType.KO);
                     }
                     else {
                         quorum.setLocked(true);
-                        requestsHandler.handleWriteQuorum(writer, scanner);
-                        quorum.setLocked(false);
+                        if (quorum.isSafelyLocked()) {
+                            writer.println(MessageType.OK);
+                            requestsHandler.handleWriteQuorum(message, writer, scanner);
+                            quorum.setLocked(false);
+                        }
+                        else {
+                            quorum.setLocked(false);
+                            writer.println(MessageType.KO);
+                        }
                     }
                 }
                 try {

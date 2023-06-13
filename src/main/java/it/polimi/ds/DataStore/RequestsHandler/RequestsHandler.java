@@ -46,7 +46,6 @@ public abstract class RequestsHandler {
             writer.println(MessageType.OK);
             writer.println(new Gson().toJson(dsElement));
         } catch(IOException e) {
-            System.out.println("Read error: " + e);
             writer.println(MessageType.KO);
         }
     }
@@ -93,14 +92,10 @@ public abstract class RequestsHandler {
         }
     }
 
-    public void handleWriteQuorum(PrintWriter writer, Scanner scanner) {
-        //TODO: Handle request of version number
-        System.out.println("OHOHOHOH");
-        Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
-        writer.println(new Message(MessageType.OK).toJson());
-        MessageType ack = MessageType.valueOf(scanner.nextLine());
-        if (ack == MessageType.OK) {
-            dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
-        }
+    public void handleWriteQuorum(Message message, PrintWriter writer, Scanner scanner) {
+        final Gson gson = new Gson();
+        writer.println(gson.toJson(dsState.read(message.getKey())));
+        final Message writeMessage = new Gson().fromJson(scanner.nextLine(), Message.class);
+        dsState.write(writeMessage.getKey(), writeMessage.getValue(), writeMessage.getVersionNumber());
     }
 }
