@@ -60,10 +60,12 @@ public class Quorum {
 
         message.setQuorum();
 
+        //Contacts writeQuorum - 1 replicas for a write quorum
         final Set<Socket> quorumReplicas = replicas.sendMessageToBatch(message, writeQuorum - 1);
 
         int availableReplicas = 1;
 
+        //Counts how many of the contacted replicas are available, and checks the most recent element they have
         DSElement mostRecentElement = new DSNullElement();
         for (Socket socket : quorumReplicas) {
             final Scanner scanner = new Scanner(socket.getInputStream());
@@ -79,10 +81,12 @@ public class Quorum {
             }
         }
 
+        //Sets the version number as the highest version number between the ones received, if any
         if (!mostRecentElement.isNull()) {
             message.setVersionNumber(mostRecentElement.getVersionNumber());
         }
 
+        //If enough replicas are available, it sends the definitive version number and waits for a final OK message
         if (availableReplicas > writeQuorum / 2) {
             availableReplicas = 1;
             for (Socket socket : quorumReplicas) {
@@ -96,6 +100,10 @@ public class Quorum {
                 }
             }
 
+            /*
+            If enough replicas are ready and the lock has not been replaced
+            the final commit message is sent and the value is written locally
+             */
             if (availableReplicas > writeQuorum / 2 && lockNotifier.isLocked()) {
                 for (Socket socket : quorumReplicas) {
                     try {
