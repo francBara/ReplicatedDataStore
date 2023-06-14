@@ -5,6 +5,7 @@ import it.polimi.ds.DataStore.DataStoreState.DSNullElement;
 import it.polimi.ds.DataStore.DataStoreState.DSState;
 import it.polimi.ds.DataStore.DataStoreState.DSStateException;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
+import it.polimi.ds.DataStore.Lock.LockNotifier;
 import it.polimi.ds.Message.Message;
 import it.polimi.ds.Message.MessageType;
 import com.google.gson.Gson;
@@ -50,7 +51,7 @@ public class Quorum {
      * @param replicas The other replicas in the datastore
      * @return True if most replicas wrote successfully, false if not
      */
-    public boolean initWriteQuorum(Message message, Replicas replicas) throws IOException, QuorumNumberException {
+    public boolean initWriteQuorum(Message message, Replicas replicas, LockNotifier lockNotifier) throws IOException, QuorumNumberException {
         if (message.messageType != MessageType.Write) {
             throw(new RuntimeException());
         }
@@ -93,13 +94,30 @@ public class Quorum {
                 } catch(Exception e) {
                     continue;
                 }
-                socket.close();
             }
 
-            if (availableReplicas > writeQuorum / 2) {
+            if (availableReplicas > writeQuorum / 2 && lockNotifier.isLocked()) {
+                for (Socket socket : quorumReplicas) {
+                    try {
+                        new PrintWriter(socket.getOutputStream(), true).println(MessageType.OK);
+                        socket.close();
+                    } catch(Exception e) {
+                        continue;
+                    }
+                }
                 //Writes in the local replica
                 dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
                 return true;
+            }
+            else {
+                for (Socket socket : quorumReplicas) {
+                    try {
+                        new PrintWriter(socket.getOutputStream(), true).println(MessageType.KO);
+                        socket.close();
+                    } catch(Exception e) {
+                        continue;
+                    }
+                }
             }
         }
         return false;

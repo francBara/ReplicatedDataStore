@@ -71,14 +71,12 @@ public abstract class RequestsHandler {
 
     public void handleWrite(PrintWriter writer, Message message) {
         try {
-            //TODO: Set proper cases when a write is interrupted or a write quorum is interrupted
-            //TODO: Still have to implement interruption in the initWriteQuorum method
             final int nonce = lock.generateNonce();
             final LockNotifier lockNotifier = lock.lock(nonce);
             if (lockNotifier.isLocked()) {
                 message.setNonce(nonce);
                 //This replica starts a write quorum
-                final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
+                final boolean quorumApproved = quorum.initWriteQuorum(message, replicas, lockNotifier);
 
                 writer.println(quorumApproved ? MessageType.OK : MessageType.KO);
                 lockNotifier.unlock();
@@ -106,7 +104,10 @@ public abstract class RequestsHandler {
             }
 
             writer.println(MessageType.OK);
-            dsState.write(writeMessage.getKey(), writeMessage.getValue(), writeMessage.getVersionNumber());
+
+            if (MessageType.valueOf(scanner.nextLine()) == MessageType.OK) {
+                dsState.write(writeMessage.getKey(), writeMessage.getValue(), writeMessage.getVersionNumber());
+            }
             lockNotifier.unlock();
         }
         else {
