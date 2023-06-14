@@ -2,7 +2,8 @@ package it.polimi.ds.DataStore.RequestsHandler;
 
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import it.polimi.ds.DataStore.DataStoreState.DSState;
-import it.polimi.ds.DataStore.DataStoreState.DSStateException;
+import it.polimi.ds.DataStore.Lock.Lock;
+import it.polimi.ds.DataStore.Lock.LockNotifier;
 import it.polimi.ds.DataStore.Quorum;
 import it.polimi.ds.DataStore.Replica;
 import it.polimi.ds.DataStore.Replicas;
@@ -21,6 +22,7 @@ public abstract class RequestsHandler {
     protected Quorum quorum;
     protected DSState dsState;
     protected int port;
+    private final Lock lock = new Lock();
 
     protected RequestsHandler(Replicas replicas, Quorum quorum, DSState dsState, int port) {
         this.replicas = replicas;
@@ -69,33 +71,46 @@ public abstract class RequestsHandler {
 
     public void handleWrite(PrintWriter writer, Message message) {
         try {
-            /*
-            //Reads the value to write, if it already exists, the version number is propagated
-            final Message readMessage = new Message(MessageType.Read);
-            readMessage.setKey(message.getKey());
-            final DSElement dsElement = quorum.initReadQuorum(readMessage, replicas);
+            //TODO: Set proper cases when a write is interrupted or a write quorum is interrupted
+            //TODO: Still have to implement interruption in the initWriteQuorum method
+            final int nonce = lock.generateNonce();
+            final LockNotifier lockNotifier = lock.lock(nonce);
+            if (lockNotifier.isLocked()) {
+                message.setNonce(nonce);
+                //This replica starts a write quorum
+                final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
 
-            if (!dsElement.isNull()) {
-                message.setVersionNumber(dsElement.getVersionNumber());
+                writer.println(quorumApproved ? MessageType.OK : MessageType.KO);
+                lockNotifier.unlock();
             }
-
-             */
-
-            //This replica starts a write quorum
-            final boolean quorumApproved = quorum.initWriteQuorum(message, replicas);
-
-            writer.println(quorumApproved ? MessageType.OK : MessageType.KO);
+            else {
+                writer.println(MessageType.KO);
+            }
         } catch(IOException | QuorumNumberException e) {
             //TODO: Handle high quorum exception
-            //System.out.println(e);
             writer.println(MessageType.KO);
         }
     }
 
     public void handleWriteQuorum(Message message, PrintWriter writer, Scanner scanner) {
-        final Gson gson = new Gson();
-        writer.println(gson.toJson(dsState.read(message.getKey())));
-        final Message writeMessage = new Gson().fromJson(scanner.nextLine(), Message.class);
-        dsState.write(writeMessage.getKey(), writeMessage.getValue(), writeMessage.getVersionNumber());
+        final LockNotifier lockNotifier = lock.lock(message.getNonce());
+        if (lockNotifier.isLocked()) {
+            writer.println(MessageType.OK);
+            final Gson gson = new Gson();
+            writer.println(gson.toJson(dsState.read(message.getKey())));
+            final Message writeMessage = new Gson().fromJson(scanner.nextLine(), Message.class);
+
+            if (!lockNotifier.isLocked()) {
+                writer.println(MessageType.KO);
+                return;
+            }
+
+            writer.println(MessageType.OK);
+            dsState.write(writeMessage.getKey(), writeMessage.getValue(), writeMessage.getVersionNumber());
+            lockNotifier.unlock();
+        }
+        else {
+            writer.println(MessageType.KO);
+        }
     }
 }

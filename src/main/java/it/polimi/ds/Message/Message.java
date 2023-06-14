@@ -7,6 +7,8 @@ public class Message {
     private String value;
     private int versionNumber;
 
+    private int nonce;
+
     private int port;
 
     public MessageType messageType;
@@ -53,6 +55,14 @@ public class Message {
 
     public void setVersionNumber(int versionNumber) {
         this.versionNumber = versionNumber;
+    }
+
+    public int getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(int nonce) {
+        this.nonce = nonce;
     }
 
     public void setQuorum() {

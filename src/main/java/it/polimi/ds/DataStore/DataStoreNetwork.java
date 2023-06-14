@@ -131,38 +131,10 @@ public class DataStoreNetwork {
                     requestsHandler.handleReadQuorum(writer, scanner, message);
                 }
                 else if (message.messageType == MessageType.Write) {
-                    if (quorum.isLocked()) {
-                        writer.println(MessageType.KO);
-                    }
-                    else {
-                        quorum.setLocked(true);
-                        //TODO: Check that it makes sense
-                        if (quorum.isSafelyLocked()) {
-                            requestsHandler.handleWrite(writer, message);
-                            quorum.setLocked(false);
-                        }
-                        else {
-                            quorum.setLocked(false);
-                            writer.println(MessageType.KO);
-                        }
-                    }
+                    requestsHandler.handleWrite(writer, message);
                 }
                 else if (message.messageType == MessageType.WriteQuorum) {
-                    if (quorum.isLocked()) {
-                        writer.println(MessageType.KO);
-                    }
-                    else {
-                        quorum.setLocked(true);
-                        if (quorum.isSafelyLocked()) {
-                            writer.println(MessageType.OK);
-                            requestsHandler.handleWriteQuorum(message, writer, scanner);
-                            quorum.setLocked(false);
-                        }
-                        else {
-                            quorum.setLocked(false);
-                            writer.println(MessageType.KO);
-                        }
-                    }
+                    requestsHandler.handleWriteQuorum(message, writer, scanner);
                 }
                 try {
                     clientSocket.close();

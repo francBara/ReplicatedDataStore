@@ -12,7 +12,7 @@ import java.util.HashSet;
 
 public class RaceConditionTest extends TestCase {
     public void testRaceCondition() {
-        DataStoreNetwork coordinator = new DataStoreNetwork(6000);
+        DataStoreNetwork coordinator = new DataStoreNetwork(10000);
         HashSet<DataStoreNetwork> replicas = new HashSet<>();
 
         new Thread(() -> {
@@ -30,10 +30,10 @@ public class RaceConditionTest extends TestCase {
         for (int i = 0; i < 18; i++) {
             int finalI = i;
             new Thread(() -> {
-                DataStoreNetwork replica = new DataStoreNetwork(6001 + finalI);
+                DataStoreNetwork replica = new DataStoreNetwork(10001 + finalI);
                 replicas.add(replica);
                 try {
-                    replica.joinDataStore("127.0.0.1", 6000);
+                    replica.joinDataStore("127.0.0.1", 10000);
                 } catch(Exception e) {
 
                 }
@@ -54,7 +54,7 @@ public class RaceConditionTest extends TestCase {
             int finalI1 = i;
             new Thread(() -> {
                 try {
-                    client.bind("127.0.0.1", 6000 + finalI1);
+                    client.bind("127.0.0.1", 10000 + finalI1);
                     client.write("Luca", "Andrulli" + finalI);
                 } catch(IOException e) {
                     fail();
@@ -63,7 +63,7 @@ public class RaceConditionTest extends TestCase {
         }
 
         try {
-            Thread.sleep(4000);
+            //Thread.sleep(4000);
         } catch(Exception ignored) {fail();}
 
         HashMap<Integer, ArrayList<DSElement>> result = new HashMap<>();
@@ -76,7 +76,7 @@ public class RaceConditionTest extends TestCase {
 
             result.put(i, new ArrayList<>());
 
-            client.bind("127.0.0.1", 6000 + i);
+            client.bind("127.0.0.1", 10000 + i);
 
             for (int j = 0; j < reads; j++) {
                 int finalI = i;

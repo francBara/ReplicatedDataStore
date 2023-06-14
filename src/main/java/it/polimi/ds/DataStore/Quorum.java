@@ -23,8 +23,6 @@ public class Quorum {
 
     final DSState dsState;
 
-    private int lockedBy = 0;
-
     //Enforcing a max number of replicas could imply concurrency problems
     //public final int maxNumberOfReplicas;
     
@@ -85,14 +83,24 @@ public class Quorum {
         }
 
         if (availableReplicas > writeQuorum / 2) {
-            //Writes in the local replica
-            dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
-
+            availableReplicas = 1;
             for (Socket socket : quorumReplicas) {
-                new PrintWriter(socket.getOutputStream(), true).println(gson.toJson(message));
+                try {
+                    new PrintWriter(socket.getOutputStream(), true).println(gson.toJson(message));
+                    if (MessageType.valueOf(new Scanner(socket.getInputStream()).nextLine()) == MessageType.OK) {
+                        availableReplicas++;
+                    }
+                } catch(Exception e) {
+                    continue;
+                }
                 socket.close();
             }
-            return true;
+
+            if (availableReplicas > writeQuorum / 2) {
+                //Writes in the local replica
+                dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
+                return true;
+            }
         }
         return false;
     }
@@ -171,23 +179,6 @@ public class Quorum {
         }
         else {
             return readWriteConflicts - 1;
-        }
-    }
-
-    public synchronized boolean isLocked() {
-        return lockedBy > 0;
-    }
-
-    public synchronized boolean isSafelyLocked() {
-        return lockedBy == 1;
-    }
-
-    public synchronized void setLocked(boolean isLocked) {
-        if (isLocked) {
-            lockedBy++;
-        }
-        else {
-            lockedBy--;
         }
     }
 }
