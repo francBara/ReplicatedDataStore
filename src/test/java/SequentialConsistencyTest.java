@@ -4,13 +4,12 @@ import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import junit.framework.TestCase;
 
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class RaceConditionTest extends TestCase {
+public class SequentialConsistencyTest extends TestCase {
     public void testRaceCondition() {
         DataStoreNetwork coordinator = new DataStoreNetwork(10000);
         HashSet<DataStoreNetwork> replicas = new HashSet<>();
@@ -47,24 +46,23 @@ public class RaceConditionTest extends TestCase {
 
         assertEquals(18, coordinator.getReplicasSize());
 
+        final HashSet<Thread> threads = new HashSet<>();
 
         for (int i = 0; i < 10; i++) {
             Client client = new Client();
             int finalI = i;
             int finalI1 = i;
-            new Thread(() -> {
+            threads.add(new Thread(() -> {
                 try {
                     client.bind("127.0.0.1", 10000 + finalI1);
                     client.write("Luca", "Andrulli" + finalI);
+                    client.write("Luca", "Kaja" + finalI);
+                    client.write("Luca", "Luca" + finalI);
                 } catch(IOException e) {
                     fail();
                 }
-            }).start();
+            }));
         }
-
-        try {
-            //Thread.sleep(4000);
-        } catch(Exception ignored) {fail();}
 
         HashMap<Integer, ArrayList<DSElement>> result = new HashMap<>();
 
@@ -80,14 +78,18 @@ public class RaceConditionTest extends TestCase {
 
             for (int j = 0; j < reads; j++) {
                 int finalI = i;
-                new Thread(() -> {
+                threads.add(new Thread(() -> {
                     try {
                         result.get(finalI).add(client.read("Luca"));
                     } catch(ReadException | IOException e) {
                         fail();
                     }
-                }).start();
+                }));
             }
+        }
+
+        for (Thread thread : threads) {
+            thread.start();
         }
 
         try {
