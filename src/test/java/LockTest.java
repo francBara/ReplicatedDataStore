@@ -51,4 +51,31 @@ public class LockTest extends TestCase {
         }
         assertTrue(notifiers.get(99).isLocked());
     }
+
+    public void testReadLock() {
+        final Lock lock = new Lock();
+
+        LockNotifier notifier = lock.lock(0);
+
+        assertTrue(notifier.isLocked());
+
+        assertFalse(lock.lockRead());
+
+        notifier.unlock();
+
+        assertFalse(notifier.isLocked());
+
+        assertTrue(lock.lockRead());
+
+        assertFalse(lock.lock(0).isLocked());
+
+        assertTrue(lock.lockRead());
+
+        lock.unlockRead();
+        lock.unlockRead();
+
+        assertTrue(lock.lock(0).isLocked());
+
+        assertFalse(lock.lockRead());
+    }
 }

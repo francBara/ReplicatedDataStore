@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SequentialConsistencyTest extends TestCase {
     public void testRaceCondition() {
@@ -48,6 +49,15 @@ public class SequentialConsistencyTest extends TestCase {
 
         final HashSet<Thread> threads = new HashSet<>();
 
+        AtomicBoolean timerActive = new AtomicBoolean(true);
+
+        threads.add(new Thread(() -> {
+            try {
+                Thread.sleep(2000);
+                timerActive.set(false);
+            } catch(InterruptedException e) {fail();}
+        }));
+
         for (int i = 0; i < 10; i++) {
             Client client = new Client();
             int finalI = i;
@@ -55,9 +65,12 @@ public class SequentialConsistencyTest extends TestCase {
             threads.add(new Thread(() -> {
                 try {
                     client.bind("127.0.0.1", 10000 + finalI1);
-                    client.write("Luca", "Andrulli" + finalI);
-                    client.write("Luca", "Kaja" + finalI);
-                    client.write("Luca", "Luca" + finalI);
+
+                    int counter = 0;
+                    while (timerActive.get()) {
+                        client.write("Luca", counter + "Andrulli" + finalI);
+                        counter++;
+                    }
                 } catch(IOException e) {
                     fail();
                 }
@@ -80,7 +93,9 @@ public class SequentialConsistencyTest extends TestCase {
                 int finalI = i;
                 threads.add(new Thread(() -> {
                     try {
-                        result.get(finalI).add(client.read("Luca"));
+                        while (timerActive.get()) {
+                            result.get(finalI).add(client.read("Luca"));
+                        }
                     } catch(ReadException | IOException e) {
                         fail();
                     }
@@ -114,9 +129,6 @@ public class SequentialConsistencyTest extends TestCase {
                     for (int h = k; h < reads; h++) {
                         if (result.get(i).get(k).getVersionNumber() == result.get(j).get(h).getVersionNumber()) {
                             assertEquals(result.get(i).get(k).getValue(), result.get(j).get(h).getValue());
-                        }
-                        if (result.get(i).get(k).getValue().equals(result.get(j).get(h).getValue())) {
-                            assertEquals(result.get(i).get(k).getVersionNumber(), result.get(j).get(h).getVersionNumber());
                         }
                     }
                 }

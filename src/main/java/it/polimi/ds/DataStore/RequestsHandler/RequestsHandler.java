@@ -1,6 +1,7 @@
 package it.polimi.ds.DataStore.RequestsHandler;
 
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
+import it.polimi.ds.DataStore.DataStoreState.DSNullElement;
 import it.polimi.ds.DataStore.DataStoreState.DSState;
 import it.polimi.ds.DataStore.Lock.Lock;
 import it.polimi.ds.DataStore.Lock.LockNotifier;
@@ -41,32 +42,43 @@ public abstract class RequestsHandler {
 
     public void handleRead(PrintWriter writer, Message message) {
         try {
-            //This replica starts a read quorum
-            final DSElement dsElement = quorum.initReadQuorum(message, replicas);
+            if (true/*lock.lockRead()*/) {
+                //This replica starts a read quorum
+                final DSElement dsElement = quorum.initReadQuorum(message, replicas);
 
-            //This replica sends the most recent value to the client
-            writer.println(MessageType.OK);
-            writer.println(new Gson().toJson(dsElement));
+                //This replica sends the most recent value to the client
+                writer.println(MessageType.OK);
+                writer.println(new Gson().toJson(dsElement));
+                lock.unlockRead();
+            }
+            else {
+                writer.println(MessageType.KO);
+            }
         } catch(IOException e) {
             writer.println(MessageType.KO);
         }
     }
 
     public void handleReadQuorum(PrintWriter writer, Scanner scanner, Message message) {
-        Gson gson = new Gson();
+        final Gson gson = new Gson();
 
-        //This replica replies to the read quorum with its version of the requested element
-        DSElement dsElement = dsState.read(message.getKey());
-        writer.println(gson.toJson(dsElement));
+        if (true/*lock.lockRead()*/) {
+            //This replica replies to the read quorum with its version of the requested element
+            DSElement dsElement = dsState.read(message.getKey());
+            writer.println(gson.toJson(dsElement));
 
 
-        //Read-repair in case of stale element
-        MessageType elementIsRecent = MessageType.valueOf(scanner.nextLine());
-        if (elementIsRecent == MessageType.KO) {
-            DSElement recentElement = gson.fromJson(scanner.nextLine(), DSElement.class);
-            dsState.write(message.getKey(), recentElement);
+            //Read-repair in case of stale element
+            MessageType elementIsRecent = MessageType.valueOf(scanner.nextLine());
+            if (elementIsRecent == MessageType.KO) {
+                DSElement recentElement = gson.fromJson(scanner.nextLine(), DSElement.class);
+                dsState.write(message.getKey(), recentElement);
+            }
+            lock.unlockRead();
         }
-
+        else {
+            writer.println(gson.toJson(new DSNullElement()));
+        }
     }
 
     public void handleWrite(PrintWriter writer, Message message) {
