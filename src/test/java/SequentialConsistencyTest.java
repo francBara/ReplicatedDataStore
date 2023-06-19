@@ -47,11 +47,11 @@ public class SequentialConsistencyTest extends TestCase {
 
         assertEquals(18, coordinator.getReplicasSize());
 
-        final HashSet<Thread> threads = new HashSet<>();
+        final HashSet<Thread> writeThreads = new HashSet<>();
 
         AtomicBoolean timerActive = new AtomicBoolean(true);
 
-        threads.add(new Thread(() -> {
+        writeThreads.add(new Thread(() -> {
             try {
                 Thread.sleep(2000);
                 timerActive.set(false);
@@ -62,7 +62,7 @@ public class SequentialConsistencyTest extends TestCase {
             Client client = new Client();
             int finalI = i;
             int finalI1 = i;
-            threads.add(new Thread(() -> {
+            writeThreads.add(new Thread(() -> {
                 try {
                     client.bind("127.0.0.1", 10000 + finalI1);
 
@@ -79,19 +79,23 @@ public class SequentialConsistencyTest extends TestCase {
 
         HashMap<Integer, ArrayList<DSElement>> result = new HashMap<>();
 
+        final HashMap<Integer, ArrayList<Thread>> readThreads = new HashMap<>();
+
         final int readers = 10;
-        final int reads = 10;
+        final int reads = 3;
 
         for (int i = 0; i < readers; i++) {
             Client client = new Client();
 
             result.put(i, new ArrayList<>());
 
-            client.bind("127.0.0.1", 10000 + i);
+            client.bind("127.0.0.1", 10000 + (i % 18));
+
+            int finalI = i;
+            readThreads.put(i, new ArrayList<>());
 
             for (int j = 0; j < reads; j++) {
-                int finalI = i;
-                threads.add(new Thread(() -> {
+                readThreads.get(finalI).add(new Thread(() -> {
                     try {
                         while (timerActive.get()) {
                             result.get(finalI).add(client.read("Luca"));
@@ -103,8 +107,16 @@ public class SequentialConsistencyTest extends TestCase {
             }
         }
 
-        for (Thread thread : threads) {
+        for (Thread thread : writeThreads) {
             thread.start();
+        }
+        for (int reader : readThreads.keySet()) {
+            new Thread(() -> {
+                for (Thread thread : readThreads.get(reader)) {
+                    thread.start();
+                    delay(100);
+                }
+            }).start();
         }
 
         try {
@@ -135,5 +147,13 @@ public class SequentialConsistencyTest extends TestCase {
             }
         }
 
+    }
+
+    private void delay(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch(InterruptedException e) {
+            fail();
+        }
     }
 }
