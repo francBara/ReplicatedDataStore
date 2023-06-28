@@ -88,10 +88,8 @@ public class Client {
     public void writeMany(int count, String key, String value) {
         for (int i = 0; i < count; i++) {
             try {
-                try {
-                    write(key, value + i);
-                } catch (Exception ignored) {}
-            } catch(Exception ignored) {}
+                write(key, value + i);
+            } catch (Exception ignored) {}
         }
     }
 }
