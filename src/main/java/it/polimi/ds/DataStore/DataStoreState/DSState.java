@@ -49,6 +49,9 @@ public class DSState {
     }
 
     private void writeInFile() {
+        //TODO: File write disabled
+        return;
+        /*
         new Thread(() -> {
             synchronized (dataStore) {
                 try {
@@ -65,6 +68,7 @@ public class DSState {
                 } catch(Exception ignored) {}
             }
         }).start();
+         */
     }
 }
 

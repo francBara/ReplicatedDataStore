@@ -173,15 +173,17 @@ public class Quorum {
             currentReadElement = localElement;
         }
         else if (!currentReadElement.isNull() && (localElement.isNull() || localElement.getVersionNumber() < currentReadElement.getVersionNumber())) {
+            //TODO: Read-repair turned off
             //Read-repair on local replica
-            dsState.write(message.getKey(), currentReadElement);
+            //dsState.write(message.getKey(), currentReadElement);
         }
 
         PrintWriter writer;
         for (Socket socket : quorumValues.keySet()) {
             writer = new PrintWriter(socket.getOutputStream(), true);
             //Read-repair, in case of stale values in replicas, an update is propagated
-            if (!currentReadElement.isNull() && (quorumValues.get(socket).isNull() || quorumValues.get(socket).getVersionNumber() < currentReadElement.getVersionNumber())) {
+            //TODO: Read-repair turned off
+            if (false && !currentReadElement.isNull() && (quorumValues.get(socket).isNull() || quorumValues.get(socket).getVersionNumber() < currentReadElement.getVersionNumber())) {
                 writer.println(MessageType.KO);
                 writer.println(gson.toJson(currentReadElement));
             }

@@ -41,9 +41,9 @@ public class DSElement {
     @Override
     public String toString() {
         if (isNull) {
-            return "null value\nv: NA";
+            return "null value, v: NA";
         }
-        return value + "\nv: " + versionNumber;
+        return value + ", v: " + versionNumber;
     }
 
     @Override

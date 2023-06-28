@@ -2,6 +2,7 @@ import it.polimi.ds.Client.Client;
 import it.polimi.ds.Client.Exceptions.ReadException;
 import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
+import it.polimi.ds.DataStore.DataStoreState.Logger;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -12,13 +13,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SequentialConsistencyTest extends TestCase {
     public void testRaceCondition() {
-        DataStoreNetwork coordinator = new DataStoreNetwork(10000);
+        final int startingPort = 5000;
+
+        DataStoreNetwork coordinator = new DataStoreNetwork(startingPort);
         HashSet<DataStoreNetwork> replicas = new HashSet<>();
 
         new Thread(() -> {
             try {
                 coordinator.initiateDataStore(10, 10);
             } catch(Exception e) {
+                System.out.println(e);
                 fail();
             }
         }).start();
@@ -30,10 +34,10 @@ public class SequentialConsistencyTest extends TestCase {
         for (int i = 0; i < 18; i++) {
             int finalI = i;
             new Thread(() -> {
-                DataStoreNetwork replica = new DataStoreNetwork(10001 + finalI);
+                DataStoreNetwork replica = new DataStoreNetwork(startingPort + 1 + finalI);
                 replicas.add(replica);
                 try {
-                    replica.joinDataStore("127.0.0.1", 10000);
+                    replica.joinDataStore("127.0.0.1", startingPort);
                 } catch(Exception e) {
 
                 }
@@ -49,11 +53,11 @@ public class SequentialConsistencyTest extends TestCase {
 
         final HashSet<Thread> writeThreads = new HashSet<>();
 
-        AtomicBoolean timerActive = new AtomicBoolean(true);
+        final AtomicBoolean timerActive = new AtomicBoolean(true);
 
         writeThreads.add(new Thread(() -> {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(4000);
                 timerActive.set(false);
             } catch(InterruptedException e) {fail();}
         }));
@@ -64,7 +68,7 @@ public class SequentialConsistencyTest extends TestCase {
             int finalI1 = i;
             writeThreads.add(new Thread(() -> {
                 try {
-                    client.bind("127.0.0.1", 10000 + finalI1);
+                    client.bind("127.0.0.1", startingPort + finalI1);
 
                     int counter = 0;
                     while (timerActive.get()) {
@@ -81,15 +85,15 @@ public class SequentialConsistencyTest extends TestCase {
 
         final HashMap<Integer, ArrayList<Thread>> readThreads = new HashMap<>();
 
-        final int readers = 10;
-        final int reads = 3;
+        final int readers = 30;
+        final int reads = 1;
 
         for (int i = 0; i < readers; i++) {
             Client client = new Client();
 
             result.put(i, new ArrayList<>());
 
-            client.bind("127.0.0.1", 10000 + (i % 18));
+            client.bind("127.0.0.1", startingPort + (i % 18));
 
             int finalI = i;
             readThreads.put(i, new ArrayList<>());
@@ -114,22 +118,29 @@ public class SequentialConsistencyTest extends TestCase {
             new Thread(() -> {
                 for (Thread thread : readThreads.get(reader)) {
                     thread.start();
-                    delay(100);
+                    //delay(100);
                 }
             }).start();
         }
 
+        delay(5000);
+
+        System.out.println("Total sockets: " + Logger.counter);
+
         try {
-            Thread.sleep(3000);
-        } catch(Exception ignored) {fail();}
+            coordinator.close();
+            for (DataStoreNetwork replica : replicas) {
+                replica.close();
+            }
+        } catch(IOException e) {fail();}
 
         for (int i = 0; i < readers; i++) {
-            System.out.println(result.get(i));
+            printSequence(result.get(i));
 
             int lastVersion = 0;
 
             //Checks that every read in a sequential read is monotonically increasing
-            for (int j = 0; j < reads; j++) {
+            for (int j = 0; j < result.get(i).size(); j++) {
                 assertTrue(result.get(i).get(j).getVersionNumber() >= lastVersion);
                 lastVersion = result.get(i).get(j).getVersionNumber();
             }
@@ -137,8 +148,8 @@ public class SequentialConsistencyTest extends TestCase {
 
             for (int j = i; j < readers; j++) {
                 //All readers must have same values for same version numbers, and vice-versa
-                for (int k = 0; k < reads; k++) {
-                    for (int h = k; h < reads; h++) {
+                for (int k = 0; k < result.get(i).size(); k++) {
+                    for (int h = k; h < result.get(j).size(); h++) {
                         if (result.get(i).get(k).getVersionNumber() == result.get(j).get(h).getVersionNumber()) {
                             assertEquals(result.get(i).get(k).getValue(), result.get(j).get(h).getValue());
                         }
@@ -155,5 +166,12 @@ public class SequentialConsistencyTest extends TestCase {
         } catch(InterruptedException e) {
             fail();
         }
+    }
+
+    private void printSequence(ArrayList<DSElement> sequence) {
+        for (DSElement element : sequence) {
+            System.out.println(element);
+        }
+        System.out.println();
     }
 }

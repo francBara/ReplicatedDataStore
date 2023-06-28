@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +29,8 @@ public class DataStoreNetwork {
     private Quorum quorum;
 
     private RequestsHandler requestsHandler;
+
+    private ServerSocket serverSocket;
 
     public DataStoreNetwork(int port) {
         this.port = port;
@@ -90,7 +93,7 @@ public class DataStoreNetwork {
      * @throws IOException
      */
     private void begin() throws IOException  {
-        final ServerSocket serverSocket = new ServerSocket(port);
+        serverSocket = new ServerSocket(port);
         final ExecutorService executor = Executors.newCachedThreadPool();
 
         //If a peer, notifies the coordinator to be ready to receive requests
@@ -99,48 +102,56 @@ public class DataStoreNetwork {
         System.out.println("\nReplica ready on port " + port);
 
         while (true) {
-            //For every open connection, a new thread starts
-            final Socket clientSocket = serverSocket.accept();
+            try {
+                //For every open connection, a new thread starts
+                final Socket clientSocket = serverSocket.accept();
 
-            executor.submit(() -> {
-                Scanner scanner;
-                PrintWriter writer;
-                try {
-                    scanner = new Scanner(clientSocket.getInputStream());
-                    writer = new PrintWriter(clientSocket.getOutputStream(), true);
-                } catch(IOException e) {
+                executor.submit(() -> {
+                    Scanner scanner;
+                    PrintWriter writer;
+                    try {
+                        scanner = new Scanner(clientSocket.getInputStream());
+                        writer = new PrintWriter(clientSocket.getOutputStream(), true);
+                    } catch(IOException e) {
+                        try {
+                            clientSocket.close();
+                        } catch(Exception ignored) {}
+                        return;
+                    }
+
+                    //The message is parsed
+                    final Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
+
+                    if (message.messageType == MessageType.Join) {
+                        requestsHandler.handleJoin(clientSocket, writer, scanner, message);
+                    }
+                    else if (message.messageType == MessageType.ReplicasUpdate) {
+                        requestsHandler.handleReplicasUpdate(scanner);
+                    }
+                    else if (message.messageType == MessageType.Read) {
+                        requestsHandler.handleRead(writer, message);
+                    }
+                    else if (message.messageType == MessageType.ReadQuorum) {
+                        requestsHandler.handleReadQuorum(writer, scanner, message);
+                    }
+                    else if (message.messageType == MessageType.Write) {
+                        requestsHandler.handleWrite(writer, message);
+                    }
+                    else if (message.messageType == MessageType.WriteQuorum) {
+                        requestsHandler.handleWriteQuorum(message, writer, scanner);
+                    }
                     try {
                         clientSocket.close();
-                    } catch(Exception ignored) {}
-                    return;
-                }
-
-                //The message is parsed
-                final Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
-
-                if (message.messageType == MessageType.Join) {
-                    requestsHandler.handleJoin(clientSocket, writer, scanner, message);
-                }
-                else if (message.messageType == MessageType.ReplicasUpdate) {
-                    requestsHandler.handleReplicasUpdate(scanner);
-                }
-                else if (message.messageType == MessageType.Read) {
-                    requestsHandler.handleRead(writer, message);
-                }
-                else if (message.messageType == MessageType.ReadQuorum) {
-                    requestsHandler.handleReadQuorum(writer, scanner, message);
-                }
-                else if (message.messageType == MessageType.Write) {
-                    requestsHandler.handleWrite(writer, message);
-                }
-                else if (message.messageType == MessageType.WriteQuorum) {
-                    requestsHandler.handleWriteQuorum(message, writer, scanner);
-                }
-                try {
-                    clientSocket.close();
-                } catch(IOException ignored) {}
-            });
+                    } catch(IOException ignored) {}
+                });
+            } catch(SocketException e) {
+                return;
+            }
         }
+    }
+
+    public void close() throws IOException {
+        serverSocket.close();
     }
 
     public void setPort(int port) {

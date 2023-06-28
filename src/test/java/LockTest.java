@@ -28,6 +28,29 @@ public class LockTest extends TestCase {
         assertTrue(notifier2.isLocked());
 
         assertFalse(notifier.isLocked());
+
+        LockNotifier notifier3 = lock.lock(500);
+
+        assertTrue(notifier3.isLocked());
+        assertFalse(notifier2.isLocked());
+        assertFalse(notifier.isLocked());
+        assertFalse(notifier.isForceLocked());
+        assertFalse(notifier2.isForceLocked());
+        assertFalse(notifier3.isForceLocked());
+
+        assertFalse(notifier.forceLock());
+        assertFalse(notifier.isForceLocked());
+
+        assertTrue(notifier3.forceLock());
+        assertTrue(notifier3.isForceLocked());
+
+        assertFalse(lock.lock(100000).isLocked());
+
+        assertTrue(notifier3.isLocked());
+        assertTrue(notifier3.isForceLocked());
+        notifier3.unlock();
+
+        assertFalse(notifier3.isLocked());
     }
 
     public void testConcurrency() {
