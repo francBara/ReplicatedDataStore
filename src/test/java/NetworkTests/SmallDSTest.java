@@ -1,3 +1,5 @@
+package NetworkTests;
+
 import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;

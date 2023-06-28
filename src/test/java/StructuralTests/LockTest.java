@@ -1,3 +1,5 @@
+package StructuralTests;
+
 import it.polimi.ds.DataStore.Lock.Lock;
 import it.polimi.ds.DataStore.Lock.LockNotifier;
 import junit.framework.TestCase;
@@ -82,23 +84,16 @@ public class LockTest extends TestCase {
 
         assertTrue(notifier.isLocked());
 
-        assertFalse(lock.lockRead());
+        assertFalse(lock.lockRead().isLocked());
 
         notifier.unlock();
 
         assertFalse(notifier.isLocked());
 
-        assertTrue(lock.lockRead());
-
-        assertFalse(lock.lock(0).isLocked());
-
-        assertTrue(lock.lockRead());
-
-        lock.unlockRead();
-        lock.unlockRead();
+        assertTrue(lock.lockRead().isLocked());
 
         assertTrue(lock.lock(0).isLocked());
 
-        assertFalse(lock.lockRead());
+        assertFalse(lock.lockRead().isLocked());
     }
 }

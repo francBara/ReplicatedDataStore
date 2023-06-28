@@ -7,13 +7,8 @@ public class Lock {
     private LockNotifier lockedBy;
 
 
-    private int readLocked = 0;
-
     public synchronized LockNotifier lock(int nonce) {
-        if (readLocked > 0) {
-            return new LockNotifier(false, this);
-        }
-        else if (lockedBy != null && lockedBy.isLocked()) {
+        if (lockedBy != null && lockedBy.isLocked()) {
             if (!lockedBy.isForceLocked() && nonce > lockNonce) {
                 lockedBy.unlock();
             }
@@ -26,16 +21,12 @@ public class Lock {
         return lockedBy;
     }
 
-    public synchronized boolean lockRead() {
+    public synchronized LockNotifier lockRead() {
         if (lockedBy != null && lockedBy.isLocked()) {
-            return false;
+            return new LockNotifier(false, this);
         }
-        readLocked += 1;
-        return true;
-    }
-
-    public synchronized void unlockRead() {
-        readLocked -= 1;
+        lockNonce = -1;
+        return new LockNotifier(true, this);
     }
 
     public int generateNonce() {

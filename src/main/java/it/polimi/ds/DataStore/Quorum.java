@@ -87,7 +87,7 @@ public class Quorum {
         }
 
         //If enough replicas are available, it sends the definitive version number and waits for a final OK message
-        if (availableReplicas > writeQuorum / 2) {
+        if (availableReplicas >= writeQuorum) {
             availableReplicas = 1;
             for (Socket socket : quorumReplicas) {
                 try {
@@ -104,7 +104,7 @@ public class Quorum {
             If enough replicas are ready and the lock has not been replaced
             the final commit message is sent and the value is written locally
              */
-            if (availableReplicas > writeQuorum / 2 && lockNotifier.isLocked()) {
+            if (availableReplicas >= writeQuorum && lockNotifier.forceLock()) {
                 for (Socket socket : quorumReplicas) {
                     try {
                         new PrintWriter(socket.getOutputStream(), true).println(MessageType.OK);
@@ -138,7 +138,7 @@ public class Quorum {
      * @return The most recent element read from the replicas
      * @throws IOException
      */
-    public DSElement initReadQuorum(Message message, Replicas replicas) throws IOException {
+    public DSElement initReadQuorum(Message message, Replicas replicas, LockNotifier lockNotifier) throws IOException {
         if (message.getType() != MessageType.Read) {
             throw(new RuntimeException());
         }
@@ -175,7 +175,9 @@ public class Quorum {
         else if (!currentReadElement.isNull() && (localElement.isNull() || localElement.getVersionNumber() < currentReadElement.getVersionNumber())) {
             //TODO: Read-repair turned off
             //Read-repair on local replica
-            //dsState.write(message.getKey(), currentReadElement);
+            if (lockNotifier.forceLock()) {
+                dsState.write(message.getKey(), currentReadElement);
+            }
         }
 
         PrintWriter writer;
@@ -183,7 +185,7 @@ public class Quorum {
             writer = new PrintWriter(socket.getOutputStream(), true);
             //Read-repair, in case of stale values in replicas, an update is propagated
             //TODO: Read-repair turned off
-            if (false && !currentReadElement.isNull() && (quorumValues.get(socket).isNull() || quorumValues.get(socket).getVersionNumber() < currentReadElement.getVersionNumber())) {
+            if (!currentReadElement.isNull() && (quorumValues.get(socket).isNull() || quorumValues.get(socket).getVersionNumber() < currentReadElement.getVersionNumber())) {
                 writer.println(MessageType.KO);
                 writer.println(gson.toJson(currentReadElement));
             }

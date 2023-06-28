@@ -1,6 +1,5 @@
 package it.polimi.ds.DataStore;
 
-import it.polimi.ds.DataStore.DataStoreState.Logger;
 import it.polimi.ds.Message.Message;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,11 +17,10 @@ public class Replica {
     public Socket sendMessage(Message message) throws IOException {
         Socket socket;
         try {
-            Logger.addCounter();
             socket = new Socket(address, port);
         } catch(IOException e) {
-            System.out.println("Error on message: " + port);
-            System.out.println(e.getMessage());
+            //System.out.println("Error on message: " + port);
+            //System.out.println(e.getMessage());
             throw(e);
         }
         final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);

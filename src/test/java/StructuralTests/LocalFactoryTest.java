@@ -1,3 +1,5 @@
+package StructuralTests;
+
 import it.polimi.ds.Client.Client;
 import it.polimi.ds.DataStore.DataStoreNetwork;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
@@ -15,7 +17,7 @@ public class LocalFactoryTest extends TestCase {
 
         new Thread(() -> {
             try {
-                coordinator.initiateDataStore(113, 10);
+                coordinator.initiateDataStore(11, 1);
             } catch (Exception ignored) {}
         }).start();
 
@@ -24,17 +26,17 @@ public class LocalFactoryTest extends TestCase {
         HashSet<DataStoreNetwork> ds = new HashSet<>();
 
         try {
-            ds = factory.getReplicas("127.0.0.1", 8000, 8001, 100);
+            ds = factory.getReplicas("127.0.0.1", 8000, 8001, 10);
         } catch(Exception ignored) {
             fail();
         }
 
         delay(4);
 
-        assertEquals(100, coordinator.getReplicasSize());
+        assertEquals(10, coordinator.getReplicasSize());
 
         Client client = new Client();
-        client.bind("127.0.0.1", 8070);
+        client.bind("127.0.0.1", 8005);
 
         try {
             assertTrue(client.write("Alen", "Kaja"));

@@ -23,7 +23,7 @@ public class LockNotifier {
             if (!isLocked) {
                 return false;
             }
-            //isForceLocked = true;
+            isForceLocked = true;
             return true;
         }
     }

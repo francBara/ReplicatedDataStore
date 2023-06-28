@@ -1,3 +1,5 @@
+package StructuralTests;
+
 import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import it.polimi.ds.DataStore.DataStoreState.DSState;
 import it.polimi.ds.DataStore.Exceptions.QuorumNumberException;
