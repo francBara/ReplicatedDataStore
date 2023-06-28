@@ -9,6 +9,8 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -63,24 +65,33 @@ public class Client {
         return reply == MessageType.OK;
     }
 
+    public ArrayList<DSElement> readMany(int count, String key) {
+        final ArrayList<DSElement> elements = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            try {
+                try {
+                    elements.add(read(key));
+                } catch (Exception ignored) {}
+            } catch(Exception ignored) {}
+        }
+
+        return elements;
+    }
+
     /**
-     * Writes the value concurrently in multiple threads
+     * Writes the value sequentially
      * @param count
      * @param key
      * @param value
      */
     public void writeMany(int count, String key, String value) {
-        new Thread(() -> {
-            for (int i = 0; i < count; i++) {
-                int finalI = i;
+        for (int i = 0; i < count; i++) {
+            try {
                 try {
-                    new Thread(() -> {
-                        try {
-                            write(key, value + finalI);
-                        } catch (Exception ignored) {}
-                    }).start();
-                } catch(Exception ignored) {}
-            }
-        }).start();
+                    write(key, value + i);
+                } catch (Exception ignored) {}
+            } catch(Exception ignored) {}
+        }
     }
 }
