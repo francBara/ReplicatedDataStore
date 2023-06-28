@@ -7,6 +7,7 @@ import it.polimi.ds.DataStore.DataStoreState.DSElement;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Locale;
 
 public class ClientMain {
@@ -119,6 +120,18 @@ public class ClientMain {
                     //System.out.println(e);
                 }
             }
+            case "READ MANY" -> {
+                String key = clientInput.nextLine(this.input,"Key to read from: ");
+                String times;
+                do{
+                    times = clientInput.nextLine(this.input, "How many reads do you want to perform? ");
+                }while(!validation.validateInt(times));
+                ArrayList<DSElement> sequence = client.readMany(Integer.parseInt(times), key);
+                for (DSElement element : sequence) {
+                    System.out.println(element);
+                }
+            }
+
             case "HELP" -> {
                 clientInput.clearConsole();
                 System.out.println(Colors.YELLOW + """
