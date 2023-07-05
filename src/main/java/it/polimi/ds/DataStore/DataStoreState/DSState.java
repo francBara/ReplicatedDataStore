@@ -8,15 +8,15 @@ import java.io.FileWriter;
 import java.util.HashMap;
 
 /**
- * Manages the actual local datastore of a single replica
+ * Manages the local storage of values
  */
 public class DSState {
     private final HashMap<String, DSElement> dataStore = new HashMap<>();
 
     /**
      *
-     * @param key
-     * @return
+     * @param key The key of the value to read
+     * @return The element corresponding to the key
      */
     public synchronized DSElement read(String key) {
         final DSElement dsElement = dataStore.get(key);
@@ -28,8 +28,9 @@ public class DSState {
 
     /**
      *
-     * @param key
-     * @param value
+     * @param key The key to write to
+     * @param value The value to write
+     * @param versionNumber The received lamport clock
      */
     public synchronized void write(String key, String value, int versionNumber) {
         if (dataStore.containsKey(key)) {
@@ -43,6 +44,11 @@ public class DSState {
         writeInFile();
     }
 
+    /**
+     *
+     * @param key The key to write to
+     * @param element The element to write
+     */
     public synchronized void write(String key, DSElement element) {
         dataStore.put(key, element);
         writeInFile();

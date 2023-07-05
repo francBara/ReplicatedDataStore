@@ -1,11 +1,16 @@
 package it.polimi.ds.DataStore;
-
-import it.polimi.ds.DataStore.Exceptions.FullDataStoreException;
-
-import java.io.IOException;
 import java.util.HashSet;
 
+
 public class LocalReplicasFactory {
+    /**
+     * Deploys a group of replicas, making them join a preexisting data store
+     * @param coordinatorAddress
+     * @param coordinatorPort
+     * @param localPort The port to host the data store process
+     * @param count The number of replicas to deploy
+     * @return
+     */
     public HashSet<DataStoreNetwork> getReplicas(String coordinatorAddress, int coordinatorPort, int localPort, int count) {
         HashSet<DataStoreNetwork> replicas = new HashSet<>();
 

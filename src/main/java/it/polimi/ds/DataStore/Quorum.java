@@ -16,18 +16,22 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Set;
 
-
+/**
+ * Manages write quorums, read quorums and quorum coherence
+ */
 public class Quorum {
     public final int writeQuorum;
     public final int readQuorum;
     public final int maxReplicas;
 
-    final DSState dsState;
+    private final DSState dsState;
 
-    //Enforcing a max number of replicas could imply concurrency problems
-    //public final int maxNumberOfReplicas;
-    
-
+    /**
+     * @param writeQuorum
+     * @param readQuorum
+     * @param dsState
+     * @throws QuorumNumberException If writeQuorum or readQuorum are not coherent
+     */
     public Quorum(int writeQuorum, int readQuorum, DSState dsState) throws QuorumNumberException {
         if (writeQuorum <= 0 || readQuorum <= 0) {
             throw(new QuorumNumberException());
@@ -46,12 +50,14 @@ public class Quorum {
     }
 
     /**
-     *
+     * Initiates a write quorum to the data store, effectively writing if successful. The write quorum could be aborted if the lock gets bullied.
      * @param message The original write message, sent from the client
      * @param replicas The other replicas in the datastore
-     * @return True if most replicas wrote successfully, false if not
+     * @param lockNotifier The lock notifier, retaining lock status
+     * @return True if the required number of replicas wrote successfully, false if not
+     * @throws IOException If communication errors arise
      */
-    public boolean initWriteQuorum(Message message, Replicas replicas, LockNotifier lockNotifier) throws IOException, QuorumNumberException {
+    public boolean initWriteQuorum(Message message, Replicas replicas, LockNotifier lockNotifier) throws IOException {
         if (message.messageType != MessageType.Write) {
             throw(new RuntimeException());
         }
@@ -86,7 +92,7 @@ public class Quorum {
             message.setVersionNumber(mostRecentElement.getVersionNumber());
         }
 
-        //If enough replicas are available, it sends the definitive version number and waits for a final OK message
+        //If enough replicas are available, it sends the final version number and waits for a final OK message
         if (availableReplicas >= writeQuorum) {
             availableReplicas = 1;
             for (Socket socket : quorumReplicas) {
@@ -132,11 +138,12 @@ public class Quorum {
     }
 
     /**
-     *
+     * Initiates a read quorum and, in case it's not bullied by other writes, performs read-repair
      * @param message The original read message, sent from the client
      * @param replicas The other replicas in the datastore
+     * @param lockNotifier The lock notifier, retaining lock status
      * @return The most recent element read from the replicas
-     * @throws IOException
+     * @throws IOException If communication errors arise
      */
     public DSElement initReadQuorum(Message message, Replicas replicas, LockNotifier lockNotifier) throws IOException {
         if (message.getType() != MessageType.Read) {
@@ -173,7 +180,6 @@ public class Quorum {
             currentReadElement = localElement;
         }
         else if (!currentReadElement.isNull() && (localElement.isNull() || localElement.getVersionNumber() < currentReadElement.getVersionNumber())) {
-            //TODO: Read-repair turned off
             //Read-repair on local replica
             if (lockNotifier.forceLock()) {
                 dsState.write(message.getKey(), currentReadElement);
@@ -184,7 +190,6 @@ public class Quorum {
         for (Socket socket : quorumValues.keySet()) {
             writer = new PrintWriter(socket.getOutputStream(), true);
             //Read-repair, in case of stale values in replicas, an update is propagated
-            //TODO: Read-repair turned off
             if (!currentReadElement.isNull() && (quorumValues.get(socket).isNull() || quorumValues.get(socket).getVersionNumber() < currentReadElement.getVersionNumber())) {
                 writer.println(MessageType.KO);
                 writer.println(gson.toJson(currentReadElement));
@@ -198,6 +203,12 @@ public class Quorum {
         return currentReadElement;
     }
 
+    /**
+     * Calculates the max number of replicas allowed for the given writeQuorum and readQuorum
+     * @param writeQuorum
+     * @param readQuorum
+     * @return The max number of replicas
+     */
     private int inferMaxReplicas(int writeQuorum, int readQuorum) {
         //NW > N / 2
         int writeWriteConflicts = 2 * writeQuorum;

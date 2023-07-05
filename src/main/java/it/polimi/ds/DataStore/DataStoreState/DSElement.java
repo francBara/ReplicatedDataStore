@@ -1,11 +1,11 @@
 package it.polimi.ds.DataStore.DataStoreState;
 
 /**
- * The element contained in a data store, referenced through a key
+ * The element contained in a data store, referenced by a key
  */
 public class DSElement {
     private String value;
-    private int versionNumber = 0;
+    private int versionNumber;
     protected boolean isNull = false;
 
     public DSElement(String value, int versionNumber) {
@@ -29,6 +29,10 @@ public class DSElement {
         return isNull;
     }
 
+    /**
+     * Sets a new version number for the element, while guaranteeing lamport clock coherence
+     * @param versionNumber
+     */
     synchronized public void setVersionNumber(int versionNumber) {
         if (versionNumber > this.versionNumber) {
             this.versionNumber = versionNumber + 1;

@@ -18,28 +18,45 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
+/**
+ * Handles requests for a replica, including join, read and write requests.
+ */
 public abstract class RequestsHandler {
     protected Replicas replicas;
     protected Quorum quorum;
     protected DSState dsState;
+
     protected int port;
+
     private final Lock lock = new Lock();
+
+    private final WriteQueue writeQueue = new WriteQueue();
 
     protected RequestsHandler(Replicas replicas, Quorum quorum, DSState dsState, int port) {
         this.replicas = replicas;
         this.quorum = quorum;
         this.dsState = dsState;
         this.port = port;
+        new Thread(this::executeQueue).start();
     }
 
     abstract public void ackCoordinator() throws IOException;
 
     abstract public void handleJoin(Socket clientSocket, PrintWriter writer, Scanner scanner, Message message);
 
+    /**
+     * Adds a new replica locally
+     * @param scanner
+     */
     public void handleReplicasUpdate(Scanner scanner) {
         replicas.addReplica(new Gson().fromJson(scanner.nextLine(), Replica.class));
     }
 
+    /**
+     * Handles a read request from the client, starting a quorum and replying with the most recent value
+     * @param writer
+     * @param message
+     */
     public void handleRead(PrintWriter writer, Message message) {
         try {
             final LockNotifier lockNotifier = lock.lockRead();
@@ -56,6 +73,12 @@ public abstract class RequestsHandler {
         }
     }
 
+    /**
+     * Handles a read quorum request from another replica, replying with the most recent local element
+     * @param writer
+     * @param scanner
+     * @param message
+     */
     public void handleReadQuorum(PrintWriter writer, Scanner scanner, Message message) {
         final Gson gson = new Gson();
         final LockNotifier lockNotifier = lock.lockRead();
@@ -73,27 +96,61 @@ public abstract class RequestsHandler {
         lockNotifier.unlock();
     }
 
-    public void handleWrite(PrintWriter writer, Message message) {
+    /**
+     * Handles a write request from a client, replying with an ACK telling if the write was successful
+     * @param writer
+     * @param message
+     */
+    public void handleWrite(Socket socket, PrintWriter writer, Message message, boolean isQueueExecution) {
         try {
             final int nonce = lock.generateNonce();
-            final LockNotifier lockNotifier = lock.lock(nonce);
-            if (lockNotifier.isLocked()) {
+            final LockNotifier lockNotifier = lock.lock(0);
+            if (lockNotifier.isLocked() && (writeQueue.isEmpty() || isQueueExecution)) {
                 message.setNonce(nonce);
                 //This replica starts a write quorum
                 final boolean quorumApproved = quorum.initWriteQuorum(message, replicas, lockNotifier);
-
+                System.out.println(quorumApproved);
                 writer.println(quorumApproved ? MessageType.OK : MessageType.KO);
                 lockNotifier.unlock();
+                try {
+                    socket.close();
+                } catch(IOException ignored) {}
+                notifyAll();
+                System.out.println("Notified");
             }
             else {
-                writer.println(MessageType.KO);
+                System.out.println("Adding");
+                writeQueue.add(socket, writer, message);
+                notifyAll();
             }
-        } catch(IOException | QuorumNumberException e) {
+        } catch(IOException e) {
             //TODO: Handle high quorum exception
             writer.println(MessageType.KO);
         }
     }
 
+    private void executeQueue() {
+        synchronized (this) {
+            while (true) {
+                if (writeQueue.isEmpty()) {
+                    try {
+                        wait();
+                        System.out.println("Hey!");
+                    } catch(InterruptedException ignored) {}
+                }
+                System.out.println("Going");
+                final QueueElement element = writeQueue.get();
+                handleWrite(element.socket, element.writer, element.message, true);
+            }
+        }
+    }
+
+    /**
+     * Handles a write quorum request from another replica, replying with an ACK telling if the replica is available and the write was successful
+     * @param message
+     * @param writer
+     * @param scanner
+     */
     public void handleWriteQuorum(Message message, PrintWriter writer, Scanner scanner) {
         final LockNotifier lockNotifier = lock.lock(message.getNonce());
         if (lockNotifier.isLocked()) {

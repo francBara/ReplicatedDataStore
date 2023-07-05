@@ -10,15 +10,23 @@ import java.net.Socket;
 import java.util.HashSet;
 
 /**
- * Keeps references to the other replicas in the data store
+ * Keeps references to other replicas in the data store, acting as a proxy for the entire data store
  */
 public class Replicas {
     private final HashSet<Replica> replicas = new HashSet<>();
 
+    /**
+     * Adds a new replica locally to the ADT
+     * @param newReplica
+     */
     public synchronized void addReplica(Replica newReplica) {
         replicas.add(newReplica);
     }
 
+    /**
+     * Contacts all present replicas, communicating a new join request of newReplica. A newReplica proxy will be added in all contacted replicas
+     * @param newReplica
+     */
     public synchronized void updateReplicas(Replica newReplica) {
         final Message message = new Message(MessageType.ReplicasUpdate);
         final String replicaJson = new Gson().toJson(newReplica);

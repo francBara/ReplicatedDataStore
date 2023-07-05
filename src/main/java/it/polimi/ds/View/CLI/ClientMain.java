@@ -103,7 +103,7 @@ public class ClientMain {
                 do{
                     times = clientInput.nextLine(this.input, "How many writes do you want to perform? ");
                 }while(!validation.validateInt(times));
-                client.writeMany(Integer.parseInt(times), key, value);
+                client.writeMany(key, value, Integer.parseInt(times));
                 System.out.println(Colors.GREEN + "Write executed"+ Colors.RESET);
             }
             case "READ" -> {
@@ -126,7 +126,7 @@ public class ClientMain {
                 do{
                     times = clientInput.nextLine(this.input, "How many reads do you want to perform? ");
                 }while(!validation.validateInt(times));
-                ArrayList<DSElement> sequence = client.readMany(Integer.parseInt(times), key);
+                ArrayList<DSElement> sequence = client.readMany(key, Integer.parseInt(times));
                 for (DSElement element : sequence) {
                     System.out.println(element);
                 }

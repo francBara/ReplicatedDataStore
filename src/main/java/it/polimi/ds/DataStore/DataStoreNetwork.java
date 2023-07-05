@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Keeps the main methods for the replica, handling initialization, settings and communication
+ * Keeps the main methods for a replica, handling initialization, settings and communication
  */
 public class DataStoreNetwork {
     private int port;
@@ -38,7 +38,11 @@ public class DataStoreNetwork {
     public DataStoreNetwork() {}
 
     /**
-     * This replica starts a new data store
+     * The replica starts a new data store
+     * @param writeQuorum
+     * @param readQuorum
+     * @throws IOException If communication errors arise
+     * @throws QuorumNumberException If writeQuorum and readQuorum are not consistent
      */
     public void initiateDataStore(int writeQuorum, int readQuorum) throws IOException, QuorumNumberException {
         quorum = new Quorum(writeQuorum, readQuorum, dsState);
@@ -49,9 +53,11 @@ public class DataStoreNetwork {
     }
 
     /**
-     * This replicas joins a preexisting data store
-     * @param address The address of a replica of the data store
-     * @param dataStorePort The port of a replica of the data store
+     * The replica joins a preexisting data store
+     * @param address The address of the datastore initializer
+     * @param dataStorePort The port of the datastore initializer
+     * @throws IOException If communication errors arise
+     * @throws FullDataStoreException If the data store can't accept new replicas, or if the contacted replica is not an initializer
      */
     public void joinDataStore(String address, int dataStorePort) throws IOException, FullDataStoreException {
         final Socket socket = new Socket(address, dataStorePort);
@@ -67,10 +73,6 @@ public class DataStoreNetwork {
         final MessageType joinApproved = MessageType.valueOf(scanner.nextLine());
 
         if (joinApproved == MessageType.KO) {
-            /*
-            This error is thrown when there are too many replicas in the data store,
-            or when the contacted replica is not the coordinator.
-            */
             throw(new FullDataStoreException());
         }
 
@@ -119,6 +121,8 @@ public class DataStoreNetwork {
                         return;
                     }
 
+                    boolean closeSocket = true;
+
                     //The message is parsed
                     final Message message = new Gson().fromJson(scanner.nextLine(), Message.class);
 
@@ -135,14 +139,17 @@ public class DataStoreNetwork {
                         requestsHandler.handleReadQuorum(writer, scanner, message);
                     }
                     else if (message.messageType == MessageType.Write) {
-                        requestsHandler.handleWrite(writer, message);
+                        closeSocket = false;
+                        requestsHandler.handleWrite(clientSocket, writer, message, false);
                     }
                     else if (message.messageType == MessageType.WriteQuorum) {
                         requestsHandler.handleWriteQuorum(message, writer, scanner);
                     }
-                    try {
-                        clientSocket.close();
-                    } catch(IOException ignored) {}
+                    if (closeSocket) {
+                        try {
+                            clientSocket.close();
+                        } catch(IOException ignored) {}
+                    }
                 });
             } catch(SocketException e) {
                 return;
@@ -150,10 +157,17 @@ public class DataStoreNetwork {
         }
     }
 
+    /**
+     * Close the connection
+     * @throws IOException
+     */
     public void close() throws IOException {
         serverSocket.close();
     }
 
+    /**
+     * @param port The port where to start the datastore process
+     */
     public void setPort(int port) {
         this.port = port;
     }
