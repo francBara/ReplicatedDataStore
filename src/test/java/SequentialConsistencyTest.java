@@ -124,13 +124,6 @@ public class SequentialConsistencyTest extends TestCase {
 
         delay(3000);
 
-        try {
-            coordinator.close();
-            for (DataStoreNetwork replica : replicas) {
-                replica.close();
-            }
-        } catch(IOException e) {fail();}
-
         for (int i = 0; i < readers; i++) {
             printSequence(result.get(i));
 

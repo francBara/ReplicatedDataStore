@@ -32,8 +32,6 @@ public class DataStoreNetwork {
 
     private ServerSocket serverSocket;
 
-    private boolean isRunning = true;
-
     public DataStoreNetwork(int port) {
         this.port = port;
     }
@@ -105,7 +103,7 @@ public class DataStoreNetwork {
 
         System.out.println("\nReplica ready on port " + port);
 
-        while (isRunning) {
+        while (true) {
             try {
                 //For every open connection, a new thread starts
                 final Socket clientSocket = serverSocket.accept();
@@ -164,7 +162,6 @@ public class DataStoreNetwork {
      * @throws IOException
      */
     public void close() throws IOException {
-        isRunning = false;
         serverSocket.close();
     }
 
