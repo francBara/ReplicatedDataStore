@@ -73,6 +73,7 @@ public class ConcurrencyTest extends TestCase {
         //All clients read the same value concurrently
         try {
             DSElement readValue = clients.get(0).read("Key");
+            assertFalse(readValue.isNull());
 
             HashSet<DSElement> readValues = new HashSet<>();
 

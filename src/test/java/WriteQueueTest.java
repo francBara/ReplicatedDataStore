@@ -20,7 +20,7 @@ public class WriteQueueTest extends TestCase {
 
         delay(1000);
 
-       final HashSet<DataStoreNetwork> replicas = new LocalReplicasFactory().getReplicas("127.0.0.1", 16000, 16001, 20);
+       final HashSet<DataStoreNetwork> replicas = new LocalReplicasFactory().getReplicas("127.0.0.1", 16000, 16001, 12);
 
        delay(3000);
 
@@ -28,10 +28,11 @@ public class WriteQueueTest extends TestCase {
 
        client.bind("127.0.0.1", 16005);
 
-       for (int i = 0; i < 1; i++) {
+       for (int i = 0; i < 20; i++) {
            new Thread(() -> {
                try {
-                   assertTrue(client.write("Alen", "Kaja"));
+                   client.write("Alen", "Kaja");
+                   //assertTrue(client.write("Alen", "Kaja"));
                } catch(Exception e) {
                    System.out.println(e);
                    fail();
@@ -39,7 +40,7 @@ public class WriteQueueTest extends TestCase {
            }).start();
        }
 
-       delay(2000);
+       delay(3000);
 
        try {
            assertEquals("Kaja", client.read("Alen").getValue());

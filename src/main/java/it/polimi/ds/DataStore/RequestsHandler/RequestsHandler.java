@@ -104,24 +104,29 @@ public abstract class RequestsHandler {
     public void handleWrite(Socket socket, PrintWriter writer, Message message, boolean isQueueExecution) {
         try {
             final int nonce = lock.generateNonce();
-            final LockNotifier lockNotifier = lock.lock(0);
-            if (lockNotifier.isLocked() && (writeQueue.isEmpty() || isQueueExecution)) {
+            final LockNotifier lockNotifier = lock.lock(nonce, false);
+            if ((writeQueue.isEmpty() || isQueueExecution) && lockNotifier.isLocked()) {
                 message.setNonce(nonce);
+
                 //This replica starts a write quorum
                 final boolean quorumApproved = quorum.initWriteQuorum(message, replicas, lockNotifier);
-                System.out.println(quorumApproved);
+
                 writer.println(quorumApproved ? MessageType.OK : MessageType.KO);
                 lockNotifier.unlock();
+
                 try {
                     socket.close();
                 } catch(IOException ignored) {}
-                notifyAll();
-                System.out.println("Notified");
+
+                synchronized(this) {
+                    if (!writeQueue.isEmpty()) {
+                        notifyAll();
+                    }
+                }
+
             }
             else {
-                System.out.println("Adding");
                 writeQueue.add(socket, writer, message);
-                notifyAll();
             }
         } catch(IOException e) {
             //TODO: Handle high quorum exception
@@ -129,18 +134,21 @@ public abstract class RequestsHandler {
         }
     }
 
+    /**
+     * Iterates all the queued write requests and executes them
+     */
     private void executeQueue() {
         synchronized (this) {
             while (true) {
                 if (writeQueue.isEmpty()) {
                     try {
                         wait();
-                        System.out.println("Hey!");
-                    } catch(InterruptedException ignored) {}
+                    } catch(InterruptedException ignored) {System.out.println("Interrupted");}
                 }
-                System.out.println("Going");
                 final QueueElement element = writeQueue.get();
-                handleWrite(element.socket, element.writer, element.message, true);
+                if (element != null) {
+                    handleWrite(element.socket, element.writer, element.message, true);
+                }
             }
         }
     }
@@ -152,7 +160,7 @@ public abstract class RequestsHandler {
      * @param scanner
      */
     public void handleWriteQuorum(Message message, PrintWriter writer, Scanner scanner) {
-        final LockNotifier lockNotifier = lock.lock(message.getNonce());
+        final LockNotifier lockNotifier = lock.lock(message.getNonce(), true);
         if (lockNotifier.isLocked()) {
             writer.println(MessageType.OK);
             final Gson gson = new Gson();

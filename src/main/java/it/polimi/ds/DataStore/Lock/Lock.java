@@ -6,7 +6,8 @@ import java.util.Random;
  * Distributed lock manager, for write and read-repair locks
  */
 public class Lock {
-    private int lockNonce = 0;
+    //TODO: Make private again
+    public int lockNonce = 0;
     private LockNotifier lockedBy;
 
 
@@ -15,9 +16,9 @@ public class Lock {
      * @param nonce If greater than the current lock nonce, the lock will be granted
      * @return A LockNotifier, which tells if the lock was granted or not
      */
-    public synchronized LockNotifier lock(int nonce) {
+    public synchronized LockNotifier lock(int nonce, boolean bully) {
         if (lockedBy != null && lockedBy.isLocked()) {
-            if (!lockedBy.isForceLocked() && nonce > lockNonce) {
+            if (bully && !lockedBy.isForceLocked() && nonce > lockNonce) {
                 lockedBy.unlock();
             }
             else {

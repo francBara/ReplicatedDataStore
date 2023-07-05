@@ -6,10 +6,20 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/**
+ * ADT representing a queue of client write requests
+ */
 public class WriteQueue {
     private final ArrayList<QueueElement> queue = new ArrayList<>();
     private boolean isQueueProcessing = false;
 
+    /**
+     * Adds a write request to the queue
+     * @param socket
+     * @param writer
+     * @param message
+     * @return True if the request was successfully added, false if not
+     */
     public synchronized boolean add(Socket socket, PrintWriter writer, Message message) {
         if (queue.size() >= 10000) {
             return false;
@@ -18,7 +28,14 @@ public class WriteQueue {
         return true;
     }
 
+    /**
+     * Returns the head of the queue, while removing it
+     * @return The head of the queue
+     */
     public synchronized QueueElement get() {
+        if (queue.isEmpty()) {
+            return null;
+        }
         QueueElement element = queue.get(0);
         queue.remove(0);
         return element;
@@ -26,14 +43,6 @@ public class WriteQueue {
 
     public synchronized boolean isEmpty() {
         return queue.isEmpty();
-    }
-
-    public synchronized void setProcessing(boolean isQueueProcessing) {
-        this.isQueueProcessing = isQueueProcessing;
-    }
-
-    public synchronized boolean isProcessing() {
-        return isQueueProcessing;
     }
 }
 
