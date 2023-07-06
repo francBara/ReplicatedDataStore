@@ -129,7 +129,6 @@ public abstract class RequestsHandler {
                 writeQueue.add(socket, writer, message);
             }
         } catch(IOException e) {
-            //TODO: Handle high quorum exception
             writer.println(MessageType.KO);
         }
     }

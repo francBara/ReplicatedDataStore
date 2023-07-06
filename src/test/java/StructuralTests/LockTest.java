@@ -63,8 +63,6 @@ public class LockTest extends TestCase {
 
         assertTrue(notifier.isLocked());
         assertFalse(notifier2.isLocked());
-
-        //TODO: Add bully parameter tests
     }
 
     public void testConcurrency() {

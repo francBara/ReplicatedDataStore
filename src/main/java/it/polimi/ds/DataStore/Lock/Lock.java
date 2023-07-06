@@ -6,8 +6,7 @@ import java.util.Random;
  * Distributed lock manager, for write and read-repair locks
  */
 public class Lock {
-    //TODO: Make private again
-    public int lockNonce = 0;
+    private int lockNonce = 0;
     private LockNotifier lockedBy;
 
 
