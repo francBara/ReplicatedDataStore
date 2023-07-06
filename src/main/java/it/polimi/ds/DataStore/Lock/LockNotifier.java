@@ -6,10 +6,12 @@ package it.polimi.ds.DataStore.Lock;
 public class LockNotifier {
     private boolean isLocked;
     private boolean isForceLocked = false;
+    public final int nonce;
     private final Lock lock;
 
-    public LockNotifier(boolean isLocked, Lock lock) {
+    public LockNotifier(boolean isLocked, int nonce, Lock lock) {
         this.isLocked = isLocked;
+        this.nonce = nonce;
         this.lock = lock;
     }
 

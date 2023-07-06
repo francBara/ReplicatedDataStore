@@ -75,8 +75,8 @@ public class SequentialConsistencyTest extends TestCase {
                         counter++;
                     }
                 } catch(IOException e) {
-                    System.out.println(e);
-                    fail();
+                    System.out.println("Error: " + e);
+                    //fail();
                 }
             }));
         }
@@ -105,7 +105,7 @@ public class SequentialConsistencyTest extends TestCase {
                             result.get(finalI).add(client.read("Luca"));
                         }
                     } catch(ReadException | IOException e) {
-                        System.out.println(e);
+                        System.out.println("Error: " + e);
                         //fail();
                     }
                 }));

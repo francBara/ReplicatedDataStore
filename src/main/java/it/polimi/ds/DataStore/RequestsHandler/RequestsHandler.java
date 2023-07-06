@@ -59,7 +59,7 @@ public abstract class RequestsHandler {
      */
     public void handleRead(PrintWriter writer, Message message) {
         try {
-            final LockNotifier lockNotifier = lock.lockRead();
+            final LockNotifier lockNotifier = lock.lockRead(message.getKey());
             //This replica starts a read quorum
             final DSElement dsElement = quorum.initReadQuorum(message, replicas, lockNotifier);
 
@@ -81,7 +81,7 @@ public abstract class RequestsHandler {
      */
     public void handleReadQuorum(PrintWriter writer, Scanner scanner, Message message) {
         final Gson gson = new Gson();
-        final LockNotifier lockNotifier = lock.lockRead();
+        final LockNotifier lockNotifier = lock.lockRead(message.getKey());
 
         //This replica replies to the read quorum with its version of the requested element
         DSElement dsElement = dsState.read(message.getKey());
@@ -104,7 +104,7 @@ public abstract class RequestsHandler {
     public void handleWrite(Socket socket, PrintWriter writer, Message message, boolean isQueueExecution) {
         try {
             final int nonce = lock.generateNonce();
-            final LockNotifier lockNotifier = lock.lock(nonce, false);
+            final LockNotifier lockNotifier = lock.lock(nonce, message.getKey(), false);
             if ((writeQueue.isEmpty() || isQueueExecution) && lockNotifier.isLocked()) {
                 message.setNonce(nonce);
 
@@ -159,7 +159,7 @@ public abstract class RequestsHandler {
      * @param scanner
      */
     public void handleWriteQuorum(Message message, PrintWriter writer, Scanner scanner) {
-        final LockNotifier lockNotifier = lock.lock(message.getNonce(), true);
+        final LockNotifier lockNotifier = lock.lock(message.getNonce(), message.getKey(), true);
         if (lockNotifier.isLocked()) {
             writer.println(MessageType.OK);
             final Gson gson = new Gson();

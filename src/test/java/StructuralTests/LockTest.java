@@ -10,28 +10,29 @@ import java.util.HashMap;
 public class LockTest extends TestCase {
     public void testLock() {
         final Lock lock = new Lock();
+        final String key = "Alen";
 
-        LockNotifier notifier = lock.lock(100, true);
+        LockNotifier notifier = lock.lock(100, key, true);
 
         assertTrue(notifier.isLocked());
 
-        assertFalse(lock.lock(0, true).isLocked());
+        assertFalse(lock.lock(0, key, true).isLocked());
 
         assertTrue(notifier.isLocked());
 
         notifier.unlock();
 
-        notifier = lock.lock(0, true);
+        notifier = lock.lock(0, key, true);
 
         assertTrue(notifier.isLocked());
 
-        LockNotifier notifier2 = lock.lock(200, true);
+        LockNotifier notifier2 = lock.lock(200, key, true);
 
         assertTrue(notifier2.isLocked());
 
         assertFalse(notifier.isLocked());
 
-        LockNotifier notifier3 = lock.lock(500, true);
+        LockNotifier notifier3 = lock.lock(500, key, true);
 
         assertTrue(notifier3.isLocked());
         assertFalse(notifier2.isLocked());
@@ -46,20 +47,23 @@ public class LockTest extends TestCase {
         assertTrue(notifier3.forceLock());
         assertTrue(notifier3.isForceLocked());
 
-        assertFalse(lock.lock(100000, true).isLocked());
+        assertFalse(lock.lock(100000, key, true).isLocked());
 
         assertTrue(notifier3.isLocked());
         assertTrue(notifier3.isForceLocked());
+
+        assertTrue(lock.lock(100000, "alksmdw", true).isLocked());
+
         notifier3.unlock();
 
         assertFalse(notifier3.isLocked());
 
-        notifier = lock.lock(1000, false);
+        notifier = lock.lock(1000, key, false);
 
         assertTrue(notifier.isLocked());
         assertFalse(notifier.isForceLocked());
 
-        notifier2 = lock.lock(10000, false);
+        notifier2 = lock.lock(10000, key, false);
 
         assertTrue(notifier.isLocked());
         assertFalse(notifier2.isLocked());
@@ -73,7 +77,7 @@ public class LockTest extends TestCase {
         for (int i = 0; i < 100; i++) {
             int finalI = i;
             new Thread(() -> {
-                notifiers.put(finalI, lock.lock(finalI, true));
+                notifiers.put(finalI, lock.lock(finalI, "a", true));
             }).start();
         }
 
@@ -90,20 +94,20 @@ public class LockTest extends TestCase {
     public void testReadLock() {
         final Lock lock = new Lock();
 
-        LockNotifier notifier = lock.lock(0, true);
+        LockNotifier notifier = lock.lock(0, "a", true);
 
         assertTrue(notifier.isLocked());
 
-        assertFalse(lock.lockRead().isLocked());
+        assertFalse(lock.lockRead("a").isLocked());
 
         notifier.unlock();
 
         assertFalse(notifier.isLocked());
 
-        assertTrue(lock.lockRead().isLocked());
+        assertTrue(lock.lockRead("a").isLocked());
 
-        assertTrue(lock.lock(0, true).isLocked());
+        assertTrue(lock.lock(0, "a", true).isLocked());
 
-        assertFalse(lock.lockRead().isLocked());
+        assertFalse(lock.lockRead("a").isLocked());
     }
 }
