@@ -28,7 +28,7 @@ public class IdleReplica extends LayoutManager{
 
         if (wQuorum!=-1 && rQuorum!= -1 && dataStorePort==-1){
             bottomBanner.setText("DATASTORE INITIATED");
-            label.setText("IP: "+ip+" PORT OPEN: "+ myPort +" wQuorum, rQuorum: "+wQuorum+" "+rQuorum);
+            label.setText("IP: "+ip+", PORT OPEN: "+ myPort +", wQuorum: "+wQuorum+ ", rQuorum: "+rQuorum);
             new Thread(() -> {
                 try {
                     dsCommunication.initiateDataStore(wQuorum, rQuorum);
@@ -41,7 +41,7 @@ public class IdleReplica extends LayoutManager{
         }
         else if(wQuorum==-1 && rQuorum==-1){
             bottomBanner.setText("DATASTORE JOINED");
-            label.setText("IP: "+ip+" PORT OPEN: "+myPort);
+            label.setText("IP: "+ip+", PORT OPEN: "+myPort);
 
             new Thread(() -> {
                 try {
