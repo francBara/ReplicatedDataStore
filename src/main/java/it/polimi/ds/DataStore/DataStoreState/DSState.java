@@ -1,5 +1,4 @@
 package it.polimi.ds.DataStore.DataStoreState;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -55,9 +54,6 @@ public class DSState {
     }
 
     private void writeInFile() {
-        //TODO: File write disabled
-        return;
-        /*
         new Thread(() -> {
             synchronized (dataStore) {
                 try {
@@ -74,7 +70,6 @@ public class DSState {
                 } catch(Exception ignored) {}
             }
         }).start();
-         */
     }
 }
 

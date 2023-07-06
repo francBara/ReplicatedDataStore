@@ -18,12 +18,12 @@ public class CoordinatorHandler extends RequestsHandler {
         super(replicas, quorum, dsState, port);
     }
 
+    /**
+     * Empty method, the coordinator shouldn't ack itself
+     * @throws IOException
+     */
     @Override
-    public void ackCoordinator() throws IOException {
-
-    }
-
-    String ack = "";
+    public void ackCoordinator() throws IOException {}
 
     @Override
     public void handleJoin(Socket clientSocket, PrintWriter writer, Scanner scanner, Message message) {
@@ -39,25 +39,7 @@ public class CoordinatorHandler extends RequestsHandler {
             writer.println(port);
             writer.println(gson.toJson(quorum));
 
-            new Thread(() -> {
-                try {
-                    ack = scanner.nextLine();
-                } catch(Exception ignored) {}
-            }).start();
-
-            for (int i = 0; i < 10; i++) {
-                if (!ack.isEmpty() && !MessageType.valueOf(ack).equals(MessageType.OK)) {
-                    return;
-                }
-                else if (!ack.isEmpty() && MessageType.valueOf(ack).equals(MessageType.OK)) {
-                    break;
-                }
-                try {
-                    Thread.sleep(200);
-                } catch(InterruptedException ignored) {}
-            }
-
-            if (ack.isEmpty()) {
+            if (MessageType.valueOf(scanner.nextLine()) != MessageType.OK) {
                 return;
             }
 

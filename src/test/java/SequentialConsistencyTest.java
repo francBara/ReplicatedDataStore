@@ -38,7 +38,7 @@ public class SequentialConsistencyTest extends TestCase {
                 try {
                     replica.joinDataStore("127.0.0.1", startingPort);
                 } catch(Exception e) {
-
+                    fail();
                 }
             }).start();
         }
@@ -75,7 +75,8 @@ public class SequentialConsistencyTest extends TestCase {
                         counter++;
                     }
                 } catch(IOException e) {
-                    //fail();
+                    System.out.println(e);
+                    fail();
                 }
             }));
         }
@@ -84,7 +85,7 @@ public class SequentialConsistencyTest extends TestCase {
 
         final HashMap<Integer, ArrayList<Thread>> readThreads = new HashMap<>();
 
-        final int readers = 15;
+        final int readers = 10;
         final int reads = 1;
 
         for (int i = 0; i < readers; i++) {
@@ -104,6 +105,7 @@ public class SequentialConsistencyTest extends TestCase {
                             result.get(finalI).add(client.read("Luca"));
                         }
                     } catch(ReadException | IOException e) {
+                        System.out.println(e);
                         //fail();
                     }
                 }));
@@ -123,6 +125,12 @@ public class SequentialConsistencyTest extends TestCase {
         }
 
         delay(3000);
+
+        boolean atLeastOneNonNull = false;
+
+        for (int i = 0; i < readers; i++) {
+
+        }
 
         for (int i = 0; i < readers; i++) {
             printSequence(result.get(i));
@@ -144,9 +152,14 @@ public class SequentialConsistencyTest extends TestCase {
                             assertEquals(result.get(i).get(k).getValue(), result.get(j).get(h).getValue());
                         }
                     }
+                    if (!result.get(i).get(k).isNull()) {
+                        atLeastOneNonNull = true;
+                    }
                 }
             }
         }
+
+        assertTrue(atLeastOneNonNull);
 
     }
 

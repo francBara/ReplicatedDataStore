@@ -97,13 +97,13 @@ public class Quorum {
             availableReplicas = 1;
             for (Socket socket : quorumReplicas) {
                 try {
-                    new PrintWriter(socket.getOutputStream(), true).println(gson.toJson(message));
+                    final PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+                    writer.println(MessageType.OK);
+                    writer.println(gson.toJson(message));
                     if (MessageType.valueOf(new Scanner(socket.getInputStream()).nextLine()) == MessageType.OK) {
                         availableReplicas++;
                     }
-                } catch(Exception e) {
-                    continue;
-                }
+                } catch(Exception ignored) {}
             }
 
             /*
@@ -115,24 +115,19 @@ public class Quorum {
                     try {
                         new PrintWriter(socket.getOutputStream(), true).println(MessageType.OK);
                         socket.close();
-                    } catch(Exception e) {
-                        continue;
-                    }
+                    } catch(Exception ignored) {}
                 }
                 //Writes in the local replica
                 dsState.write(message.getKey(), message.getValue(), message.getVersionNumber());
                 return true;
             }
-            else {
-                for (Socket socket : quorumReplicas) {
-                    try {
-                        new PrintWriter(socket.getOutputStream(), true).println(MessageType.KO);
-                        socket.close();
-                    } catch(Exception e) {
-                        continue;
-                    }
-                }
-            }
+        }
+
+        for (Socket socket : quorumReplicas) {
+            try {
+                new PrintWriter(socket.getOutputStream(), true).println(MessageType.KO);
+                socket.close();
+            } catch(Exception ignored) {}
         }
         return false;
     }

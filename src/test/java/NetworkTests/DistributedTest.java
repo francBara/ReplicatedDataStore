@@ -88,8 +88,6 @@ public class DistributedTest extends TestCase {
 
             client.bind("127.0.0.1", 5001);
 
-            System.out.println("\n\n");
-
             assertTrue(client.write("Kaja", "Alen"));
             assertTrue(client.write("Distributed", "Systems"));
 

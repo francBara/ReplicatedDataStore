@@ -45,6 +45,7 @@ public class WriteQueueTest extends TestCase {
        try {
            assertEquals("Kaja", client.read("Alen").getValue());
        } catch(Exception e) {
+           System.out.println(e);
            fail();
        }
     }

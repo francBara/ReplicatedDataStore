@@ -165,6 +165,12 @@ public abstract class RequestsHandler {
             writer.println(MessageType.OK);
             final Gson gson = new Gson();
             writer.println(gson.toJson(dsState.read(message.getKey())));
+
+            if (MessageType.valueOf(scanner.nextLine()) == MessageType.KO) {
+                lockNotifier.unlock();
+                return;
+            }
+
             final Message writeMessage = new Gson().fromJson(scanner.nextLine(), Message.class);
 
             if (!lockNotifier.forceLock()) {
