@@ -19,7 +19,7 @@ The client can contact any data store node, requesting reads, writes and multipe
 
 #### Write request
 
-- Let *C* be a client initiating a write request
+- Let ***C*** be a client initiating a write request
 - Let *A* be a node of a datastore
 - let *S* a set of *wq* nodes of the datastore
 - let *R* be a resource of the datastore
@@ -29,8 +29,6 @@ The client can contact any data store node, requesting reads, writes and multipe
 4. *A* collects the results and send the most recent version of *R* to *S*
 5. *S* send a commit ack to *A*
 6. *A* sends global commit to *S*
-
-Whenever a client 
 
 #### Locking
 
